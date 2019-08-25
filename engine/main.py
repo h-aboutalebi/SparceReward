@@ -49,6 +49,9 @@ parser.add_argument('--num_steps', type=int, default=1.0e6, metavar='N',
 parser.add_argument('--update_interval', type=int, default=1, metavar='N',
                     help='how often the target policy is updated (default: 1)')
 
+parser.add_argument('--eval_interval', type=int, default=5.0e3, metavar='N',
+                    help='how often the target policy is evaluated (default: 5.0e3)')
+
 # *********************************** Reward Sparcity Setting ********************************************
 
 parser.add_argument('--sparse_reward', action='store_false',
@@ -161,11 +164,11 @@ env.seed(args.seed)
 memory = ReplayMemory(args.replay_size)
 # sets agent type:
 agent = get_agent_type(args, env)
-new_run = Run_RL(num_steps=args.num_steps, update_interval=args.update_interval,
+new_run = Run_RL(num_steps=args.num_steps, update_interval=args.update_interval,eval_interval=args.eval_interval,
                  mini_batch_size=args.mini_batch_size, agent=agent, env=env)
 Final_results = {"reward": [], "modified_reward": [], "poly_rl_ratio": {"ratio": [], "step_number": [], "epoch": []}}
 start_time = time.time()
-new_run.run(start_time)
+new_run.run(start_time,writer)
 for i_episode in range(args.num_episodes):
     total_numsteps_episode = 0
     state = torch.Tensor([env.reset()])
