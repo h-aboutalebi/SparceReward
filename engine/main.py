@@ -18,13 +18,13 @@ import os
 
 from engine.algorithms.param_noise import *
 from engine.utils.setting_tools import get_agent_type
+from engine.utils.replay_memory import ReplayMemory, Transition
 from policy_engine.mod_reward import *
 from policy_engine.poly_rl import *
 from policy_engine.ddpg import DDPG
 from policy_engine.div_ddpg_actor import *
 from policy_engine.normalized_actions import NormalizedActions
 from policy_engine.ounoise import OUNoise
-from policy_engine.replay_memory import ReplayMemory, Transition
 
 parser = argparse.ArgumentParser(description='PyTorch poly Rl exploration implementation')
 
@@ -164,8 +164,9 @@ env.seed(args.seed)
 memory = ReplayMemory(args.replay_size)
 # sets agent type:
 agent = get_agent_type(args, env)
+reward_modifier=Reward_Zero_Sparce(args.threshold_sparcity,args.sparse_reward)
 new_run = Run_RL(num_steps=args.num_steps, update_interval=args.update_interval,eval_interval=args.eval_interval,
-                 mini_batch_size=args.mini_batch_size, agent=agent, env=env)
+                 mini_batch_size=args.mini_batch_size, agent=agent, env=env,memory=memory)
 Final_results = {"reward": [], "modified_reward": [], "poly_rl_ratio": {"ratio": [], "step_number": [], "epoch": []}}
 start_time = time.time()
 new_run.run(start_time,writer)
