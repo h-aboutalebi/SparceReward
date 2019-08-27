@@ -5,6 +5,7 @@ import time
 import logging
 import pickle
 
+from engine.reward_modifier.reward_zero_sparce import Reward_Zero_Sparce
 from engine.run_RL import Run_RL
 
 logger = logging.getLogger(__name__)
@@ -19,12 +20,6 @@ import os
 from engine.algorithms.param_noise import *
 from engine.utils.setting_tools import get_agent_type
 from engine.utils.replay_memory import ReplayMemory, Transition
-from policy_engine.mod_reward import *
-from policy_engine.poly_rl import *
-from policy_engine.ddpg import DDPG
-from policy_engine.div_ddpg_actor import *
-from policy_engine.normalized_actions import NormalizedActions
-from policy_engine.ounoise import OUNoise
 
 parser = argparse.ArgumentParser(description='PyTorch poly Rl exploration implementation')
 
@@ -164,110 +159,10 @@ env.seed(args.seed)
 memory = ReplayMemory(args.replay_size)
 # sets agent type:
 agent = get_agent_type(args, env)
-reward_modifier=Reward_Zero_Sparce(args.threshold_sparcity,args.sparse_reward)
-new_run = Run_RL(num_steps=args.num_steps, update_interval=args.update_interval,eval_interval=args.eval_interval,
-                 mini_batch_size=args.mini_batch_size, agent=agent, env=env,memory=memory)
+reward_modifier = Reward_Zero_Sparce(args.threshold_sparcity, args.sparse_reward)
+new_run = Run_RL(reward_modifier=reward_modifier, num_steps=args.num_steps, update_interval=args.update_interval, eval_interval=args.eval_interval,
+                 mini_batch_size=args.mini_batch_size, agent=agent, env=env, memory=memory)
 Final_results = {"reward": [], "modified_reward": [], "poly_rl_ratio": {"ratio": [], "step_number": [], "epoch": []}}
 start_time = time.time()
-new_run.run(start_time,writer)
-for i_episode in range(args.num_episodes):
-    total_numsteps_episode = 0
-    state = torch.Tensor([env.reset()])
-    if (args.poly_rl_exploration_flag):
-        poly_rl_alg.reset_parameters_in_beginning_of_episode(i_episode + 2)
+new_run.run(start_time, writer)
 
-    episode_reward = 0
-    previous_action = None
-    previous_state = state
-    counter = 0
-    while (counter < args.num_steps):
-        total_numsteps += 1
-        action = agent.select_action(state=state, action_noise=ounoise, previous_action=previous_action, tensor_board_writer=writer,
-                                     step_number=total_numsteps, param_noise=param_noise)
-        previous_action = action
-        next_state, reward, done, info_ = env.step(action.cpu().numpy()[0])
-        total_numsteps_episode += 1
-        episode_reward += reward
-        action = torch.Tensor(action.cpu())
-        mask = torch.Tensor([not done])
-        next_state = torch.Tensor([next_state])
-        modified_reward, flag_absorbing_state = make_reward_sparse(env=env, flag_sparse=args.sparse_reward, reward=reward,
-                                                                   threshold_sparcity=args.threshold_sparcity,
-                                                                   negative_reward_flag=args.reward_negative, num_steps=args.num_steps)
-        modified_reward = torch.Tensor([modified_reward])
-        memory.push(state, action, mask, next_state, modified_reward)
-        previous_state = state
-        state = next_state
-        if (args.poly_rl_exploration_flag and poly_rl_alg.Update_variable):
-            poly_rl_alg.update_parameters(previous_state=previous_state, new_state=state, tensor_board_writer=writer)
-
-        if len(memory) > args.batch_size:
-            for _ in range(args.updates_per_step):
-                transitions = memory.sample(args.batch_size)
-                batch = Transition(*zip(*transitions))
-                value_loss, policy_loss = agent.update_parameters(batch, tensor_board_writer=writer,
-                                                                  episode_number=i_episode)
-                if args.param_noise and args.algo == "DDPG":
-                    agent.perturb_actor_parameters(param_noise)
-                updates += 1
-        # if the environemnt should be reset, we break
-        if done or flag_absorbing_state:
-            break
-        counter += 1
-
-    writer.add_scalar('reward/train', episode_reward, i_episode)
-    rewards.append(episode_reward)
-    if args.param_noise:
-        episode_transitions = memory.memory[memory.position - counter:memory.position]
-        states = torch.cat([transition[0] for transition in episode_transitions], 0)
-        unperturbed_actions = agent.select_action(states, None, None)
-        perturbed_actions = torch.cat([transition[1] for transition in episode_transitions], 0)
-
-        ddpg_dist = ddpg_distance_metric(perturbed_actions.cpu().numpy(), unperturbed_actions.cpu().numpy())
-        param_noise.adapt(ddpg_dist)
-
-    if (args.poly_rl_exploration_flag):
-        Final_results["poly_rl_ratio"]["ratio"].append(agent.number_of_time_target_policy_is_called)
-        Final_results["poly_rl_ratio"]["step_number"].append(total_numsteps)
-        Final_results["poly_rl_ratio"]["epoch"].append(i_episode)
-    # print(Final_results)
-
-    # This section is for computing the target policy perfomance
-    # The environment is reset every 10 episodes automatically and we compute the target policy reward.
-    if i_episode % 10 == 0:
-        state = torch.Tensor([env.reset()])
-        episode_reward = 0
-        episode_modified_reward = 0
-        counter = 0
-        while (counter < args.num_steps):
-            action = agent.select_action_from_target_actor(state)
-            next_state, reward, done, _ = env.step(action.cpu().numpy()[0])
-            episode_reward += reward
-            modified_reward, flag_absorbing_state = make_reward_sparse(env=env, flag_sparse=args.sparse_reward, reward=reward,
-                                                                       threshold_sparcity=args.threshold_sparcity,
-                                                                       negative_reward_flag=args.reward_negative, num_steps=args.num_steps)
-
-            episode_modified_reward += modified_reward
-            next_state = torch.Tensor([next_state])
-            state = next_state
-            if done or flag_absorbing_state:
-                break
-            counter += 1
-
-        writer.add_scalar('real_reward/test', episode_reward, i_episode)
-        writer.add_scalar('reward_modified/test', episode_modified_reward, i_episode)
-        time_len = time.time() - start_time
-        start_time = time.time()
-        rewards.append(episode_reward)
-
-        Final_results["reward"].append(episode_reward)
-        Final_results["modified_reward"].append(episode_modified_reward)
-        last_x_body = env.env.body_xyz[0]
-        writer.add_scalar('x_body', last_x_body, i_episode)
-        logger.info(
-            "Episode: {}, time:{}, numsteps in the episode: {}, total steps so far: {}, x_body: {}, reward: {}, modified_reward {}".format(
-                i_episode, time_len, total_numsteps_episode, total_numsteps, last_x_body, episode_reward, episode_modified_reward))
-
-    with open(file_path_results + '/result_reward0.pkl', 'wb') as handle:
-        pickle.dump(Final_results, handle)
-env.close()

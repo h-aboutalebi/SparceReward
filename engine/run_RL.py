@@ -1,6 +1,7 @@
 import logging
 import torch
 import numpy as np
+from engine.utils.replay_memory import ReplayMemory, Transition
 
 logger = logging.getLogger(__name__)
 
@@ -39,19 +40,36 @@ class Run_RL():
             modified_reward = self.reward_modifier.make_reward_sparse(reward)
             self.save_in_memory(states, actions, torch.Tensor([modified_reward]), mask)
             episode_reward += reward
-            self.update_agent(step_number)
+            self.update_agent(step_number,writer)
             self.evaluate_policy()
 
     def save_in_memory(self, states, actions, reward, mask):
         self.memory.push(states[-2], actions[-1], mask, states[-1], reward)
 
-    def update_agent(self, step_number):
+    def update_agent(self, step_number,writer):
         if (step_number % self.update_interval == 0 and step_number > self.mini_batch_size):
             logger.info("Target policy agent has been updated")
+            transitions = self.memory.sample(self.mini_batch_size)
+            batch = Transition(*zip(*transitions))
+            value_loss, policy_loss = self.agent.update_parameters(batch, tensor_board_writer=writer,
+                                                                  episode_number=step_number)
 
     # This function evaluates the target policy if the eval_interval has reached
     def evaluate_policy(self):
+        Total_reward = 0
+        Total_modified_reward = 0
+        done=False
         if self.timesteps_since_eval >= self.eval_interval:
             self.timesteps_since_eval = 0
             logger.info("Target policy agent has been evaluated")
+            state = torch.Tensor([self.env.reset()])
+            action = self.agent.select_action_from_target_actor(state)
+            next_state, reward, done, _ = self.env.step(action.cpu().numpy()[0])
+            Total_reward += reward
+            modified_reward= self.reward_modifier.make_reward_sparse(reward)
+            Total_modified_reward += modified_reward
+            next_state = torch.Tensor([next_state])
+            state = next_state
+            if done:
+                return
         self.timesteps_since_eval += 1
