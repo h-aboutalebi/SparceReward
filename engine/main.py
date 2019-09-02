@@ -11,7 +11,6 @@ from engine.run_RL import Run_RL
 logger = logging.getLogger(__name__)
 import sys
 import gym
-import roboschool
 import numpy as np
 import torch
 import random
@@ -32,7 +31,7 @@ parser.add_argument('--seed', type=int, default=4, metavar='N',
 
 # *********************************** Environment Setting ********************************************
 
-parser.add_argument('--env_name', default="RoboschoolHalfCheetah-v1",
+parser.add_argument('--env_name', default="HalfCheetah-v2",
                     help='name of the environment to run')
 
 parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
@@ -159,10 +158,8 @@ env.seed(args.seed)
 memory = ReplayMemory(args.replay_size)
 # sets agent type:
 agent = get_agent_type(args, env)
-reward_modifier = Reward_Zero_Sparce(args.threshold_sparcity, args.sparse_reward)
+reward_modifier = Reward_Zero_Sparce(env, args.threshold_sparcity, args.sparse_reward)
 new_run = Run_RL(reward_modifier=reward_modifier, num_steps=args.num_steps, update_interval=args.update_interval, eval_interval=args.eval_interval,
                  mini_batch_size=args.mini_batch_size, agent=agent, env=env, memory=memory)
-Final_results = {"reward": [], "modified_reward": [], "poly_rl_ratio": {"ratio": [], "step_number": [], "epoch": []}}
 start_time = time.time()
 new_run.run(start_time, writer)
-
