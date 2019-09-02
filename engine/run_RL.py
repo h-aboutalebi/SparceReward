@@ -40,6 +40,8 @@ class Run_RL():
             action = self.agent.select_action(state=states[-1], previous_action=actions[-1], tensor_board_writer=writer
                                               , step_number=step_number)
             next_state, reward, done, info_ = self.env.step(action.cpu().numpy()[0])
+            if (done):
+                env_is_reset = True
             states.append(torch.Tensor([next_state]))
             actions.append(torch.Tensor(action.cpu()))
             mask = torch.Tensor([not done])
@@ -47,7 +49,7 @@ class Run_RL():
             self.save_in_memory(states, actions, torch.Tensor([modified_reward]), mask)
             episode_reward += reward
             self.update_agent(step_number, writer)
-            self.evaluate_policy(states)
+            self.evaluate_policy(writer)
 
     def save_in_memory(self, states, actions, reward, mask):
         self.memory.push(states[-2], actions[-1], mask, states[-1], reward)
@@ -61,18 +63,19 @@ class Run_RL():
                                                                    episode_number=step_number)
 
     # This function evaluates the target policy if the eval_interval has reached
-    def evaluate_policy(self,states):
+    def evaluate_policy(self,writer):
         Total_reward = 0
         Total_modified_reward = 0
         done = False
         if self.timesteps_since_eval >= self.eval_interval:
             logger.info("Evaluating target policy ...")
             self.initial_x = get_current_pose(self.env)
-            states.append(torch.Tensor([self.env.reset()]))
+            states = [torch.Tensor([self.env.reset()])]
+            actions = [torch.Tensor([0.0 for _ in range(self.env.shape[0])])]
             self.timesteps_since_eval = 0
             while (True):
-                action = self.agent.select_action_from_target_actor(state)
-                next_state, reward, done, _ = self.env.step(action.cpu().numpy()[0])
+                action = self.agent.select_action_target(state=states[-1], previous_action=actions[-1], tensor_board_writer=writer)
+                next_state, reward, done, info_ = self.env.step(action.cpu().numpy()[0])
                 Total_reward += reward
                 modified_reward = self.reward_modifier.make_reward_sparse(reward, self.initial_x)
                 Total_modified_reward += modified_reward
