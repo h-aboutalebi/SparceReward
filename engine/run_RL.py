@@ -1,6 +1,7 @@
 import logging
 import torch
 import numpy as np
+import time
 
 from engine.utils.env_tools import get_current_pose
 from engine.utils.replay_memory import ReplayMemory, Transition
@@ -26,7 +27,8 @@ class Run_RL():
     def run(self, start_time, writer):
         logger.info("Learning has started ...")
         rewards = np.array([])
-        episode_reward = 0
+        total_reward = 0
+        total_modified_reward = 0
         updates = 0
         states = [torch.Tensor([self.env.reset()])]
         actions = [torch.Tensor([0.0 for _ in range(self.env.shape[0])])]
@@ -47,9 +49,16 @@ class Run_RL():
             mask = torch.Tensor([not done])
             modified_reward = self.reward_modifier.make_reward_sparse(reward, self.initial_x)
             self.save_in_memory(states, actions, torch.Tensor([modified_reward]), mask)
-            episode_reward += reward
-            self.update_agent(step_number, writer)
-            self.evaluate_policy(writer)
+            total_reward += reward
+            total_modified_reward+=modified_reward
+            self.update_agent(start_time, step_number, writer)
+            self.evaluate_policy(start_time, step_number, writer)
+            start_time = time.time()
+            if(step_number%10==0):
+                writer.add_scalar('raw_reward/train', total_reward, step_number)
+                writer.add_scalar('mod_reward/train', total_modified_reward, step_number)
+
+
 
     def save_in_memory(self, states, actions, reward, mask):
         self.memory.push(states[-2], actions[-1], mask, states[-1], reward)
@@ -63,9 +72,9 @@ class Run_RL():
                                                                    episode_number=step_number)
 
     # This function evaluates the target policy if the eval_interval has reached
-    def evaluate_policy(self,writer):
-        Total_reward = 0
-        Total_modified_reward = 0
+    def evaluate_policy(self, start_time, step_number, writer):
+        total_reward = 0
+        total_modified_reward = 0
         done = False
         if self.timesteps_since_eval >= self.eval_interval:
             logger.info("Evaluating target policy ...")
@@ -76,11 +85,14 @@ class Run_RL():
             while (True):
                 action = self.agent.select_action_target(state=states[-1], previous_action=actions[-1], tensor_board_writer=writer)
                 next_state, reward, done, info_ = self.env.step(action.cpu().numpy()[0])
-                Total_reward += reward
+                total_reward += reward
                 modified_reward = self.reward_modifier.make_reward_sparse(reward, self.initial_x)
-                Total_modified_reward += modified_reward
-                next_state = torch.Tensor([next_state])
-                state = next_state
+                total_modified_reward += modified_reward
                 if done:
-                    return
+                    break
+            time_elapsed = time.time() - start_time
+            logger.info("Elapsed time:{} | Number of steps: {} | Raw reward: {} | Modified reward: {}"
+                        .format(time_elapsed, step_number, total_reward, total_modified_reward))
+            writer.add_scalar('raw_reward/test', total_reward, step_number)
+            writer.add_scalar('mod_reward/test', total_modified_reward, step_number)
         self.timesteps_since_eval += 1
