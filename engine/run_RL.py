@@ -28,7 +28,6 @@ class Run_RL():
         logger.info("Learning has started ...")
         total_reward = 0
         total_modified_reward = 0
-        updates = 0
         states = []
         actions = [None]
         env_is_reset = True
@@ -49,11 +48,11 @@ class Run_RL():
             modified_reward = self.reward_modifier.make_reward_sparse(reward, self.initial_x)
             self.memory.add((states[-2], states[-1], action, reward, done))
             total_reward += reward
-            total_modified_reward+=modified_reward
+            total_modified_reward += modified_reward
             self.update_agent(start_time, step_number, writer)
             self.evaluate_policy(start_time, step_number, writer)
             start_time = time.time()
-            if(step_number%10==0):
+            if (step_number % 10 == 0):
                 writer.add_scalar('raw_reward/train', total_reward, step_number)
                 writer.add_scalar('mod_reward/train', total_modified_reward, step_number)
 

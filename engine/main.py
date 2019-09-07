@@ -5,6 +5,7 @@ import time
 import logging
 import pickle
 
+from engine.algorithms.DDPG.replay_memory import ReplayBuffer
 from engine.reward_modifier.reward_zero_sparce import Reward_Zero_Sparce
 from engine.run_RL import Run_RL
 
@@ -18,7 +19,6 @@ import os
 
 from engine.algorithms.param_noise import *
 from engine.utils.setting_tools import get_agent_type
-from engine.utils.replay_memory import ReplayMemory, Transition
 
 parser = argparse.ArgumentParser(description='PyTorch poly Rl exploration implementation')
 
@@ -155,9 +155,16 @@ except:
 # *********************************** Environment Building ********************************************
 env = gym.make(args.env_name)
 env.seed(args.seed)
-memory = ReplayMemory(args.replay_size)
+state_dim = env.observation_space.shape[0]
+action_dim = env.action_space.shape[0]
+max_action = float(env.action_space.high[0])
+logger.info(
+    "action dimension: {} | State dimension: {} | Max action number: {}".format(action_dim, state_dim, max_action))
+
+logger.info("Creating Agent ...")
+memory = ReplayBuffer(args.buffer_size)
 # sets agent type:
-agent = get_agent_type(args, env)
+agent = get_agent_type(state_dim, action_dim, max_action, args, env)
 reward_modifier = Reward_Zero_Sparce(env, args.threshold_sparcity, args.sparse_reward)
 new_run = Run_RL(reward_modifier=reward_modifier, num_steps=args.num_steps, update_interval=args.update_interval, eval_interval=args.eval_interval,
                  mini_batch_size=args.mini_batch_size, agent=agent, env=env, memory=memory)
