@@ -7,6 +7,8 @@ From OpenAI Baselines:
 https://github.com/openai/baselines/blob/master/baselines/ddpg/noise.py
 """
 
+#This is another type of noise.
+# Not used in the current version of DDPG implementation.
 class AdaptiveParamNoiseSpec(object):
     def __init__(self, initial_stddev=0.1, desired_action_stddev=0.2, adaptation_coefficient=1.01):
         """
@@ -26,7 +28,6 @@ class AdaptiveParamNoiseSpec(object):
         else:
             # Increase stddev.
             self.current_stddev *= self.adaptation_coefficient
-        print(self.current_stddev)
 
     def get_stats(self):
         stats = {
@@ -47,7 +48,3 @@ def ddpg_distance_metric(actions1, actions2):
     mean_diff = np.mean(np.square(diff), axis=0)
     dist = sqrt(np.mean(mean_diff))
     return dist
-
-
-
-
