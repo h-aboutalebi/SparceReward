@@ -40,16 +40,16 @@ class Run_RL():
                 env_is_reset = False
             action = self.agent.select_action(state=states[-1], previous_action=actions[-1], tensor_board_writer=writer
                                               , step_number=step_number)
-            next_state, reward, done, info_ = self.env.step(action.cpu().numpy()[0])
+            next_state, reward, done, info_ = self.env.step(action)
             if (done):
                 env_is_reset = True
             states.append(next_state)
-            actions.append(torch.Tensor(action.cpu()))
+            actions.append(action)
             modified_reward = self.reward_modifier.make_reward_sparse(reward, self.initial_x)
             self.memory.add((states[-2], states[-1], action, reward, done))
             total_reward += reward
             total_modified_reward += modified_reward
-            self.update_agent(start_time, step_number, writer)
+            self.update_agent(step_number, writer)
             self.evaluate_policy(start_time, step_number, writer)
             start_time = time.time()
             if (step_number % 10 == 0):
@@ -75,8 +75,9 @@ class Run_RL():
             self.timesteps_since_eval = 0
             while (True):
                 action = self.agent.select_action_target(state=state, previous_action=actions[-1], tensor_board_writer=writer)
-                state, reward, done, info_ = self.env.step(action.cpu().numpy()[0])
+                state, reward, done, info_ = self.env.step(action)
                 total_reward += reward
+                actions.append(action)
                 modified_reward = self.reward_modifier.make_reward_sparse(reward, self.initial_x)
                 total_modified_reward += modified_reward
                 if done:

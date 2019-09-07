@@ -5,10 +5,10 @@ class AbstractAgent():
         self.action_dim = action_dim
         self.max_action = max_action
 
-    def select_action(self, state, tensor_board_writer=None, step_number=None):
+    def select_action(self, state, previous_action=None, tensor_board_writer=None, step_number=None):
         raise NotImplementedError
 
-    def select_action_target(self, state, tensor_board_writer=None, step_number=None):
+    def select_action_target(self, state, previous_action=None, tensor_board_writer=None, step_number=None):
         raise NotImplementedError
 
     def train(self, **kwargs):

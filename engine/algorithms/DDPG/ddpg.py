@@ -13,7 +13,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Paper: https://arxiv.org/abs/1509.02971
 # [Not the implementation used in the TD3 paper]
 
-#Scott Fujimoto implementation
+# Scott Fujimoto implementation
 
 class Actor(nn.Module):
     def __init__(self, state_dim, action_dim, max_action):
@@ -65,8 +65,8 @@ class DDPG(AbstractAgent):
         self.critic_target.load_state_dict(self.critic.state_dict())
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), weight_decay=1e-2)
 
-    def select_action(self, state, tensor_board_writer=None, step_number=None):
-        state=np.array(state)
+    def select_action(self, state, tensor_board_writer=None, previous_action=None, step_number=None):
+        state = np.array(state)
         state = torch.Tensor(state.reshape(1, -1)).to(device)
         action = self.actor(state).cpu().data.numpy().flatten()
         if self.expl_noise != 0:
@@ -74,8 +74,8 @@ class DDPG(AbstractAgent):
                 self.action_low, self.action_high)
         return action
 
-    def select_action_target(self, state, tensor_board_writer=None, step_number=None):
-        state=np.array(state)
+    def select_action_target(self, state, previous_action=None, tensor_board_writer=None, step_number=None):
+        state = np.array(state)
         state = torch.Tensor(state.reshape(1, -1)).to(device)
         return self.actor_target(state).cpu().data.numpy().flatten()
 

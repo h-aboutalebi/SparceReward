@@ -62,21 +62,11 @@ parser.add_argument('--algo', default='DDPG',
 # *********************************** DDPG Setting ********************************************
 
 # This is the factor for updating the target policy with delay based on behavioural policy
-parser.add_argument('--tau', type=float, default=0.001, metavar='G',
-                    help='discount factor for model (default: 0.001)')
+parser.add_argument("--expl_noise", default=0.1, type=float)  # Std of Gaussian exploration noise
 
-parser.add_argument('--lr_actor', type=float, default=1e-4,
-                    help='learning rate for actor policy')
+parser.add_argument("--tau", default=0.005, type=float)  # Target network update rate)
 
-parser.add_argument('--lr_critic', type=float, default=1e-4,
-                    help='learning rate for critic policy')
-
-parser.add_argument('--hidden_size', type=int, default=128, metavar='N',
-                    help='number of episodes (default: 128)')
-
-# very important factor. Should be investigated in the future.
-parser.add_argument('--replay_size', type=int, default=1000000, metavar='N',
-                    help='size of replay buffer (default: 1000000)')
+parser.add_argument('--buffer_size', type=int, default=1e6)
 
 # Important: batch size here is different in semantics
 parser.add_argument('--mini_batch_size', type=int, default=100, metavar='N',
@@ -88,9 +78,6 @@ parser.add_argument('--mini_batch_size', type=int, default=100, metavar='N',
 # *********************************** Param Noise DDPG Setting ********************************************
 
 # Note: The following noise are for the behavioural policy of the pure DDPG without the poly_rl policy
-parser.add_argument('--ou_noise', type=bool, default=True,
-                    help="This is the noise used for the pure version DDPG (without poly_rl_exploration)"
-                         " where the behavioural policy has perturbation in only mean of target policy")
 
 parser.add_argument('--noise_scale', type=float, default=0.3, metavar='G',
                     help='initial noise scale (default: 0.3)')
@@ -166,7 +153,7 @@ memory = ReplayBuffer(args.buffer_size)
 # sets agent type:
 agent = get_agent_type(state_dim, action_dim, max_action, args, env)
 reward_modifier = Reward_Zero_Sparce(env, args.threshold_sparcity, args.sparse_reward)
-new_run = Run_RL(reward_modifier=reward_modifier, num_steps=args.num_steps, update_interval=args.update_interval, eval_interval=args.eval_interval,
+new_run = Run_RL(reward_modifier=reward_modifier, num_steps=int(args.num_steps), update_interval=args.update_interval, eval_interval=args.eval_interval,
                  mini_batch_size=args.mini_batch_size, agent=agent, env=env, memory=memory)
 start_time = time.time()
 new_run.run(start_time, writer)
