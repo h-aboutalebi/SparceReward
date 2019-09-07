@@ -48,7 +48,7 @@ parser.add_argument('--eval_interval', type=int, default=5.0e3, metavar='N',
 
 # *********************************** Reward Sparcity Setting ********************************************
 
-parser.add_argument('--sparse_reward', action='store_false',
+parser.add_argument('--sparse_reward', action='store_true',
                     help='for making reward sparse. Default=True')
 
 parser.add_argument('--threshold_sparcity', type=float, default=1.15, metavar='G',
