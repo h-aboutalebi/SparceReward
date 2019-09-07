@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-from neutrino.rl_lab.Mujoco.abstract_agent import AbstractAgent
+from engine.algorithms.abstract_agent import AbstractAgent
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -13,6 +13,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Paper: https://arxiv.org/abs/1509.02971
 # [Not the implementation used in the TD3 paper]
 
+#Scott Fujimoto implementation
 
 class Actor(nn.Module):
     def __init__(self, state_dim, action_dim, max_action):
