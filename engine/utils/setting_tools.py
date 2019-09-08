@@ -12,7 +12,7 @@ def get_agent_type(state_dim, action_dim, max_action, args, env,memory):
     if (args.algo == "DDPG"):
         agent = DDPG(state_dim, action_dim, max_action, expl_noise=args.expl_noise,
                      action_high=env.action_space.high, action_low=env.action_space.low, tau=args.tau)
-    elif (args.algo == "PARAM_DDPG"):
+    elif (args.algo == "DDPG_PARAM"):
         agent = DDPG_Param_Noise(state_dim, action_dim, max_action, expl_noise=args.expl_noise,
                      action_high=env.action_space.high, action_low=env.action_space.low, tau=args.tau,
                      initial_stdev=args.initial_stdev, noise_scale=args.noise_scale,memory=memory)

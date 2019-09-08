@@ -56,7 +56,7 @@ parser.add_argument('--threshold_sparcity', type=float, default=1.15, metavar='G
 # *********************************** Algorithm Setting ********************************************
 
 parser.add_argument('--algo', default='DDPG',
-                    help='algorithm to use: DDPG | PARAM_DDPG | DIV_DDPG | POLYRL_DDPG')
+                    help='algorithm to use: DDPG | DDPG_PARAM | DIV_DDPG | POLYRL_DDPG')
 
 # *********************************** DDPG Setting ********************************************
 
@@ -81,10 +81,7 @@ parser.add_argument('--mini_batch_size', type=int, default=100, metavar='N',
 parser.add_argument('--noise_scale', type=float, default=0.3, metavar='G',
                     help='initial noise scale (default: 0.3)')
 
-parser.add_argument('--final_noise_scale', type=float, default=0.3, metavar='G',
-                    help='final noise scale (default: 0.3)')
-
-parser.add_argument('--param_noise_initial_stdev', type=float, default=1e-4)
+parser.add_argument('--initial_stdev', type=float, default=1e-4)
 
 # *********************************** DIV DDPG Setting ********************************************
 
@@ -150,9 +147,10 @@ logger.info(
 logger.info("Creating Agent ...")
 memory = ReplayBuffer(args.buffer_size)
 # sets agent type:
-agent = get_agent_type(state_dim, action_dim, max_action, args, env,memory)
+agent = get_agent_type(state_dim, action_dim, max_action, args, env, memory)
 reward_modifier = Reward_Zero_Sparce(env, args.threshold_sparcity, args.sparse_reward)
-new_run = Run_RL(reward_modifier=reward_modifier, num_steps=int(args.num_steps), update_interval=args.update_interval, eval_interval=args.eval_interval,
+new_run = Run_RL(reward_modifier=reward_modifier, num_steps=int(args.num_steps), update_interval=args.update_interval,
+                 eval_interval=args.eval_interval,
                  mini_batch_size=args.mini_batch_size, agent=agent, env=env, memory=memory)
 start_time = time.time()
 new_run.run(start_time, writer)
