@@ -7,8 +7,6 @@ import torch.nn.functional as F
 from engine.algorithms.DDPG_PARAMNOISE.param_noise import AdaptiveParamNoiseSpec, ddpg_distance_metric
 from engine.algorithms.abstract_agent import AbstractAgent
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 # Implementation of Deep Deterministic Policy Gradients (DDPG)
 # Paper: https://arxiv.org/abs/1509.02971
@@ -50,9 +48,9 @@ class Critic(nn.Module):
 
 class DDPG_Param_Noise(AbstractAgent):
     def __init__(self, state_dim, action_dim, max_action, expl_noise, action_high, action_low, tau,
-                 initial_stdev, noise_scale,memory):
+                 initial_stdev, noise_scale,memory,device):
         super(DDPG_Param_Noise, self).__init__(state_dim=state_dim, action_dim=action_dim,
-                                               max_action=max_action)
+                                               max_action=max_action,device=device)
         self.memory=memory
         self.expl_noise = expl_noise
         self.action_dim = action_dim
@@ -73,7 +71,7 @@ class DDPG_Param_Noise(AbstractAgent):
 
     def select_action(self, state, tensor_board_writer=None, previous_action=None, step_number=None, perturb=True):
         state = np.array(state)
-        state = torch.Tensor(state.reshape(1, -1)).to(device)
+        state = torch.Tensor(state.reshape(1, -1)).to(self.device)
         if(perturb):
             action = self.actor_perturbed(state).cpu().data.numpy().flatten()
         else:
@@ -99,7 +97,7 @@ class DDPG_Param_Noise(AbstractAgent):
 
     def select_action_target(self, state, previous_action=None, tensor_board_writer=None, step_number=None):
         state = np.array(state)
-        state = torch.Tensor(state.reshape(1, -1)).to(device)
+        state = torch.Tensor(state.reshape(1, -1)).to(self.device)
         return self.actor_target(state).cpu().data.numpy().flatten()
 
     def train(self, replay_buffer, step_number, batch_size=64, gamma=0.99,
@@ -107,11 +105,11 @@ class DDPG_Param_Noise(AbstractAgent):
 
         # Sample replay buffer
         x, y, u, r, d = replay_buffer.sample(batch_size)
-        state = torch.Tensor(x).to(device)
-        action = torch.Tensor(u).to(device)
-        next_state = torch.Tensor(y).to(device)
-        done = torch.Tensor(1 - d).to(device)
-        reward = torch.Tensor(r).to(device)
+        state = torch.Tensor(x).to(self.device)
+        action = torch.Tensor(u).to(self.device)
+        next_state = torch.Tensor(y).to(self.device)
+        done = torch.Tensor(1 - d).to(self.device)
+        reward = torch.Tensor(r).to(self.device)
 
         # Compute the target Q value
         target_Q = self.critic_target(next_state, self.actor_target(next_state))

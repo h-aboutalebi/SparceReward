@@ -6,16 +6,18 @@ from engine.algorithms.DDPG_PARAMNOISE.ddpg_param_noise import DDPG_Param_Noise
 logger = logging.getLogger(__name__)
 
 
-def get_agent_type(state_dim, action_dim, max_action, args, env,memory):
+def get_agent_type(state_dim, action_dim, max_action, args, env,memory,device):
     agent = None
     # Adds noise to the selected action by the policy"
     if (args.algo == "DDPG"):
         agent = DDPG(state_dim, action_dim, max_action, expl_noise=args.expl_noise,
-                     action_high=env.action_space.high, action_low=env.action_space.low, tau=args.tau)
+                     action_high=env.action_space.high, action_low=env.action_space.low, tau=args.tau,
+                     device=device)
     elif (args.algo == "DDPG_PARAM"):
         agent = DDPG_Param_Noise(state_dim, action_dim, max_action, expl_noise=args.expl_noise,
                      action_high=env.action_space.high, action_low=env.action_space.low, tau=args.tau,
-                     initial_stdev=args.initial_stdev, noise_scale=args.noise_scale,memory=memory)
+                     initial_stdev=args.initial_stdev, noise_scale=args.noise_scale,memory=memory,
+                                 device=device)
     # elif (args.algo == "POLYRL_DDPG"):
     #     agent = DDPG(gamma=args.gamma, tau=args.tau, hidden_size=args.hidden_size,
     #                  poly_rl_exploration_flag=True, param_noise=False, ounoise=ounoise,

@@ -144,10 +144,13 @@ max_action = float(env.action_space.high[0])
 logger.info(
     "action dimension: {} | State dimension: {} | Max action number: {}".format(action_dim, state_dim, max_action))
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+logger.info("device is set for: {}".format(device))
+
 logger.info("Creating Agent ...")
 memory = ReplayBuffer(args.buffer_size)
 # sets agent type:
-agent = get_agent_type(state_dim, action_dim, max_action, args, env, memory)
+agent = get_agent_type(state_dim, action_dim, max_action, args, env, memory,device)
 reward_modifier = Reward_Zero_Sparce(env, args.threshold_sparcity, args.sparse_reward)
 new_run = Run_RL(reward_modifier=reward_modifier, num_steps=int(args.num_steps), update_interval=args.update_interval,
                  eval_interval=args.eval_interval,

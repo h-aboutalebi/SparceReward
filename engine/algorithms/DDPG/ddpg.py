@@ -6,8 +6,6 @@ import torch.nn.functional as F
 
 from engine.algorithms.abstract_agent import AbstractAgent
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 # Implementation of Deep Deterministic Policy Gradients (DDPG)
 # Paper: https://arxiv.org/abs/1509.02971
@@ -48,26 +46,26 @@ class Critic(nn.Module):
 
 
 class DDPG(AbstractAgent):
-    def __init__(self, state_dim, action_dim, max_action, expl_noise, action_high, action_low, tau):
+    def __init__(self, state_dim, action_dim, max_action, expl_noise, action_high, action_low, tau,device):
         super(DDPG, self).__init__(state_dim=state_dim, action_dim=action_dim,
-                                   max_action=max_action)
+                                   max_action=max_action,device=device)
         self.expl_noise = expl_noise
         self.action_dim = action_dim
         self.action_high = action_high
         self.tau = tau
         self.action_low = action_low
-        self.actor = Actor(state_dim, action_dim, max_action).to(device)
-        self.actor_target = Actor(state_dim, action_dim, max_action).to(device)
+        self.actor = Actor(state_dim, action_dim, max_action).to(self.device)
+        self.actor_target = Actor(state_dim, action_dim, max_action).to(self.device)
         self.actor_target.load_state_dict(self.actor.state_dict())
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=1e-4)
-        self.critic = Critic(state_dim, action_dim).to(device)
-        self.critic_target = Critic(state_dim, action_dim).to(device)
+        self.critic = Critic(state_dim, action_dim).to(self.device)
+        self.critic_target = Critic(state_dim, action_dim).to(self.device)
         self.critic_target.load_state_dict(self.critic.state_dict())
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), weight_decay=1e-2)
 
     def select_action(self, state, tensor_board_writer=None, previous_action=None, step_number=None):
         state = np.array(state)
-        state = torch.Tensor(state.reshape(1, -1)).to(device)
+        state = torch.Tensor(state.reshape(1, -1)).to(self.device)
         action = self.actor(state).cpu().data.numpy().flatten()
         if self.expl_noise != 0:
             action = (action + np.random.normal(0, self.expl_noise, size=self.action_dim)).clip(
@@ -76,18 +74,18 @@ class DDPG(AbstractAgent):
 
     def select_action_target(self, state, previous_action=None, tensor_board_writer=None, step_number=None):
         state = np.array(state)
-        state = torch.Tensor(state.reshape(1, -1)).to(device)
+        state = torch.Tensor(state.reshape(1, -1)).to(self.device)
         return self.actor_target(state).cpu().data.numpy().flatten()
 
     def train(self, replay_buffer, step_number, batch_size=64, gamma=0.99, writer=None, env_reset=False, nb_env_reset=None):
 
         # Sample replay buffer
         x, y, u, r, d = replay_buffer.sample(batch_size)
-        state = torch.Tensor(x).to(device)
-        action = torch.Tensor(u).to(device)
-        next_state = torch.Tensor(y).to(device)
-        done = torch.Tensor(1 - d).to(device)
-        reward = torch.Tensor(r).to(device)
+        state = torch.Tensor(x).to(self.device)
+        action = torch.Tensor(u).to(self.device)
+        next_state = torch.Tensor(y).to(self.device)
+        done = torch.Tensor(1 - d).to(self.device)
+        reward = torch.Tensor(r).to(self.device)
 
         # Compute the target Q value
         target_Q = self.critic_target(next_state, self.actor_target(next_state))
