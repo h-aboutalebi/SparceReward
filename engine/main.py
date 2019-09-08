@@ -17,7 +17,6 @@ import torch
 import random
 import os
 
-from engine.algorithms.param_noise import *
 from engine.utils.setting_tools import get_agent_type
 
 parser = argparse.ArgumentParser(description='PyTorch poly Rl exploration implementation')
@@ -151,7 +150,7 @@ logger.info(
 logger.info("Creating Agent ...")
 memory = ReplayBuffer(args.buffer_size)
 # sets agent type:
-agent = get_agent_type(state_dim, action_dim, max_action, args, env)
+agent = get_agent_type(state_dim, action_dim, max_action, args, env,memory)
 reward_modifier = Reward_Zero_Sparce(env, args.threshold_sparcity, args.sparse_reward)
 new_run = Run_RL(reward_modifier=reward_modifier, num_steps=int(args.num_steps), update_interval=args.update_interval, eval_interval=args.eval_interval,
                  mini_batch_size=args.mini_batch_size, agent=agent, env=env, memory=memory)

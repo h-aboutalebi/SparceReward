@@ -1,21 +1,21 @@
 import logging
 
 from engine.algorithms.DDPG.ddpg import DDPG
+from engine.algorithms.DDPG_PARAMNOISE.ddpg_param_noise import DDPG_Param_Noise
 
 logger = logging.getLogger(__name__)
 
 
-def get_agent_type(state_dim, action_dim, max_action, args, env):
+def get_agent_type(state_dim, action_dim, max_action, args, env,memory):
     agent = None
     # Adds noise to the selected action by the policy"
     if (args.algo == "DDPG"):
         agent = DDPG(state_dim, action_dim, max_action, expl_noise=args.expl_noise,
                      action_high=env.action_space.high, action_low=env.action_space.low, tau=args.tau)
-    # elif (args.algo == "PARAM_DDPG"):
-    #     agent = DDPG(gamma=args.gamma, tau=args.tau, hidden_size=args.hidden_size,
-    #                  poly_rl_exploration_flag=False, param_noise=True, ounoise=ounoise,
-    #                  num_inputs=env.observation_space.shape[0], action_space=env.action_space,
-    #                  lr_actor=args.lr_actor, lr_critic=args.lr_critic)
+    elif (args.algo == "PARAM_DDPG"):
+        agent = DDPG_Param_Noise(state_dim, action_dim, max_action, expl_noise=args.expl_noise,
+                     action_high=env.action_space.high, action_low=env.action_space.low, tau=args.tau,
+                     initial_stdev=args.initial_stdev, noise_scale=args.noise_scale,memory=memory)
     # elif (args.algo == "POLYRL_DDPG"):
     #     agent = DDPG(gamma=args.gamma, tau=args.tau, hidden_size=args.hidden_size,
     #                  poly_rl_exploration_flag=True, param_noise=False, ounoise=ounoise,

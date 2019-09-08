@@ -79,7 +79,7 @@ class DDPG(AbstractAgent):
         state = torch.Tensor(state.reshape(1, -1)).to(device)
         return self.actor_target(state).cpu().data.numpy().flatten()
 
-    def train(self, replay_buffer, step_number, batch_size=64, gamma=0.99, writer=None):
+    def train(self, replay_buffer, step_number, batch_size=64, gamma=0.99, writer=None, env_reset=False, nb_env_reset=None):
 
         # Sample replay buffer
         x, y, u, r, d = replay_buffer.sample(batch_size)

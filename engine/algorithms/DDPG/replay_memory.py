@@ -18,6 +18,12 @@ class ReplayBuffer(object):
         else:
             self.storage.append(data)
 
+    def get_init_states(self,i,j):
+        return [element[0] for element in self.storage[i:j]]
+
+    def get_post_states(self,i,j):
+        return [element[1] for element in self.storage[i:j]]
+
     def sample(self, batch_size):
         ind = np.random.randint(0, len(self.storage), size=batch_size)
         x, y, u, r, d = [], [], [], [], []

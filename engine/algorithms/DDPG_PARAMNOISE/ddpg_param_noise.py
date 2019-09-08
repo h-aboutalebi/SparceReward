@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-from engine.algorithms.DDPG_PARAMNOISE.param_noise import AdaptiveParamNoiseSpec
+from engine.algorithms.DDPG_PARAMNOISE.param_noise import AdaptiveParamNoiseSpec, ddpg_distance_metric
 from engine.algorithms.abstract_agent import AbstractAgent
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -50,14 +50,15 @@ class Critic(nn.Module):
 
 class DDPG_Param_Noise(AbstractAgent):
     def __init__(self, state_dim, action_dim, max_action, expl_noise, action_high, action_low, tau,
-                 param_noise_initial_stdev,noise_scale):
+                 initial_stdev, noise_scale,memory):
         super(DDPG_Param_Noise, self).__init__(state_dim=state_dim, action_dim=action_dim,
-                                   max_action=max_action)
+                                               max_action=max_action)
+        self.memory=memory
         self.expl_noise = expl_noise
         self.action_dim = action_dim
         self.action_high = action_high
-        self.param_noise=AdaptiveParamNoiseSpec(initial_stddev=param_noise_initial_stdev,
-                                     desired_action_stddev=noise_scale, adaptation_coefficient=1.05)
+        self.param_noise = AdaptiveParamNoiseSpec(initial_stddev=initial_stdev,
+                                                  desired_action_stddev=noise_scale, adaptation_coefficient=1.05)
         self.tau = tau
         self.action_low = action_low
         self.actor = Actor(state_dim, action_dim, max_action).to(device)
@@ -70,16 +71,19 @@ class DDPG_Param_Noise(AbstractAgent):
         self.critic_target.load_state_dict(self.critic.state_dict())
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), weight_decay=1e-2)
 
-    def select_action(self, state, tensor_board_writer=None, previous_action=None, step_number=None):
+    def select_action(self, state, tensor_board_writer=None, previous_action=None, step_number=None, perturb=True):
         state = np.array(state)
         state = torch.Tensor(state.reshape(1, -1)).to(device)
-        action = self.actor_perturbed(state).cpu().data.numpy().flatten()
+        if(perturb):
+            action = self.actor_perturbed(state).cpu().data.numpy().flatten()
+        else:
+            action = self.actor(state).cpu().data.numpy().flatten()
         if self.expl_noise != 0:
             action = (action + np.random.normal(0, self.expl_noise, size=self.action_dim)).clip(
                 self.action_low, self.action_high)
         return action
 
-    def perturb_actor_parameters(self, param_noise):
+    def perturb_actor_parameters(self):
         """Apply parameter noise to actor model, for exploration"""
         self.hard_update(self.actor_perturbed, self.actor)
         params = self.actor_perturbed.state_dict()
@@ -87,9 +91,9 @@ class DDPG_Param_Noise(AbstractAgent):
             if 'ln' in name:
                 pass
             param = params[name].to(self.device)
-            param += torch.randn(param.shape).to(self.device) * param_noise.current_stddev
+            param += torch.randn(param.shape).to(self.device) * self.param_noise.current_stddev
 
-    def hard_update(self,target, source):
+    def hard_update(self, target, source):
         for target_param, param in zip(target.parameters(), source.parameters()):
             target_param.data.copy_(param.data)
 
@@ -98,7 +102,8 @@ class DDPG_Param_Noise(AbstractAgent):
         state = torch.Tensor(state.reshape(1, -1)).to(device)
         return self.actor_target(state).cpu().data.numpy().flatten()
 
-    def train(self, replay_buffer, step_number, batch_size=64, gamma=0.99, writer=None):
+    def train(self, replay_buffer, step_number, batch_size=64, gamma=0.99,
+              writer=None, env_reset=False, nb_env_reset=None):
 
         # Sample replay buffer
         x, y, u, r, d = replay_buffer.sample(batch_size)
@@ -130,6 +135,9 @@ class DDPG_Param_Noise(AbstractAgent):
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
+        self.perturb_actor_parameters()
+        if(env_reset):
+            self.adapt_param_noise(batch_size)
 
         # Update the frozen target models
         for param, target_param in zip(self.critic.parameters(), self.critic_target.parameters()):
@@ -137,6 +145,15 @@ class DDPG_Param_Noise(AbstractAgent):
 
         for param, target_param in zip(self.actor.parameters(), self.actor_target.parameters()):
             target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
+
+    def adapt_param_noise(self, batch_size):
+        states = self.memory.get_init_states(self.memory.ptr - batch_size, self.memory.ptr)
+        perturbed_actions = self.memory.get_post_states(self.memory.ptr - batch_size, self.memory.ptr)
+        unperturbed_actions = []
+        for state in states:
+            unperturbed_actions.append(self.select_action(state,perturb=False))
+        ddpg_dist = ddpg_distance_metric(np.array(perturbed_actions), np.array(unperturbed_actions))
+        self.param_noise.adapt(ddpg_dist)
 
     def save(self, filename, directory):
         torch.save(self.actor.state_dict(), '%s/%s_actor.pth' % (directory, filename))

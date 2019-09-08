@@ -59,7 +59,7 @@ class Run_RL():
         if (step_number % self.update_interval == 0 and step_number > self.mini_batch_size):
             # logger.info("Target policy agent has been updated")
             self.agent.train(replay_buffer=self.memory, writer=writer,
-                             step_number=step_number)
+                             step_number=step_number,nb_env_reset=self.nb_env_reset,batch_size=self.mini_batch_size)
 
     # This function evaluates the target policy if the eval_interval has reached
     def evaluate_policy(self, start_time, step_number, writer):

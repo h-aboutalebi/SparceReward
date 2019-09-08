@@ -11,5 +11,5 @@ class AbstractAgent():
     def select_action_target(self, state, previous_action=None, tensor_board_writer=None, step_number=None):
         raise NotImplementedError
 
-    def train(self, **kwargs):
+    def train(self,  **kwargs):
         raise NotImplementedError
