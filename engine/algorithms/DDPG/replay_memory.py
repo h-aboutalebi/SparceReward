@@ -10,19 +10,22 @@ class ReplayBuffer(object):
         self.storage = []
         self.max_size = max_size
         self.ptr = 0
+        self.position_write=0
 
     def add(self, data):
         if len(self.storage) == self.max_size:
             self.storage[int(self.ptr)] = data
             self.ptr = (self.ptr + 1) % self.max_size
+            self.position_write = int(self.ptr)
         else:
             self.storage.append(data)
+            self.position_write=len(self.storage)-1
 
     def get_init_states(self,i,j):
         return [element[0] for element in self.storage[i:j]]
 
-    def get_post_states(self,i,j):
-        return [element[1] for element in self.storage[i:j]]
+    def get_actions(self,i,j):
+        return [element[2] for element in self.storage[i:j]]
 
     def sample(self, batch_size):
         ind = np.random.randint(0, len(self.storage), size=batch_size)

@@ -116,7 +116,7 @@ file_path_results = args.output_path + "/" + str(datetime.datetime.now()).replac
 if not os.path.exists(args.output_path):
     os.mkdir(args.output_path)
 os.mkdir(file_path_results)
-logging.basicConfig(level=logging.INFO, filename=file_path_results + "/log.txt")
+logging.basicConfig(level=logging.DEBUG, filename=file_path_results + "/log.txt")
 logging.getLogger().addHandler(logging.StreamHandler())
 
 header = "===================== Experiment configuration ========================"

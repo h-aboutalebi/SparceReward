@@ -34,7 +34,7 @@ class Run_RL():
         for step_number in range(self.num_steps):
             if (env_is_reset is True):
                 self.nb_env_reset += 1
-                logger.info("Environment has been reset (done is True). Counter = {}".format(self.nb_env_reset))
+                logger.debug("Environment has been reset (done is True). Counter = {}".format(self.nb_env_reset))
                 self.initial_x = get_current_pose(self.env)
                 states.append(self.env.reset())
                 env_is_reset = False
@@ -49,17 +49,18 @@ class Run_RL():
             self.memory.add((states[-2], states[-1], action, reward, done))
             total_reward += reward
             total_modified_reward += modified_reward
-            self.update_agent(step_number, writer)
+            self.update_agent(step_number, writer,env_is_reset)
             start_time = self.evaluate_policy(start_time, step_number, writer)
             if (step_number % 10 == 0):
                 writer.add_scalar('raw_reward/train', total_reward, step_number)
                 writer.add_scalar('mod_reward/train', total_modified_reward, step_number)
 
-    def update_agent(self, step_number, writer):
+    def update_agent(self, step_number, writer,env_is_reset):
         if (step_number % self.update_interval == 0 and step_number > self.mini_batch_size):
             # logger.info("Target policy agent has been updated")
             self.agent.train(replay_buffer=self.memory, writer=writer,
-                             step_number=step_number,nb_env_reset=self.nb_env_reset,batch_size=self.mini_batch_size)
+                             step_number=step_number,batch_size=self.mini_batch_size,
+                             env_reset=env_is_reset)
 
     # This function evaluates the target policy if the eval_interval has reached
     def evaluate_policy(self, start_time, step_number, writer):

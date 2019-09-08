@@ -3,6 +3,8 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
+import logging
+logger = logging.getLogger(__name__)
 
 from engine.algorithms.DDPG_PARAMNOISE.param_noise import AdaptiveParamNoiseSpec, ddpg_distance_metric
 from engine.algorithms.abstract_agent import AbstractAgent
@@ -48,10 +50,10 @@ class Critic(nn.Module):
 
 class DDPG_Param_Noise(AbstractAgent):
     def __init__(self, state_dim, action_dim, max_action, expl_noise, action_high, action_low, tau,
-                 initial_stdev, noise_scale,memory,device):
+                 initial_stdev, noise_scale, memory, device):
         super(DDPG_Param_Noise, self).__init__(state_dim=state_dim, action_dim=action_dim,
-                                               max_action=max_action,device=device)
-        self.memory=memory
+                                               max_action=max_action, device=device)
+        self.memory = memory
         self.expl_noise = expl_noise
         self.action_dim = action_dim
         self.action_high = action_high
@@ -72,7 +74,7 @@ class DDPG_Param_Noise(AbstractAgent):
     def select_action(self, state, tensor_board_writer=None, previous_action=None, step_number=None, perturb=True):
         state = np.array(state)
         state = torch.Tensor(state.reshape(1, -1)).to(self.device)
-        if(perturb):
+        if (perturb):
             action = self.actor_perturbed(state).cpu().data.numpy().flatten()
         else:
             action = self.actor(state).cpu().data.numpy().flatten()
@@ -101,7 +103,7 @@ class DDPG_Param_Noise(AbstractAgent):
         return self.actor_target(state).cpu().data.numpy().flatten()
 
     def train(self, replay_buffer, step_number, batch_size=64, gamma=0.99,
-              writer=None, env_reset=False, nb_env_reset=None):
+              writer=None, env_reset=False):
 
         # Sample replay buffer
         x, y, u, r, d = replay_buffer.sample(batch_size)
@@ -134,7 +136,7 @@ class DDPG_Param_Noise(AbstractAgent):
         actor_loss.backward()
         self.actor_optimizer.step()
         self.perturb_actor_parameters()
-        if(env_reset):
+        if (env_reset):
             self.adapt_param_noise(batch_size)
 
         # Update the frozen target models
@@ -145,11 +147,14 @@ class DDPG_Param_Noise(AbstractAgent):
             target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
 
     def adapt_param_noise(self, batch_size):
-        states = self.memory.get_init_states(self.memory.ptr - batch_size, self.memory.ptr)
-        perturbed_actions = self.memory.get_post_states(self.memory.ptr - batch_size, self.memory.ptr)
+        if(batch_size>self.memory.position_write):
+            return
+        logger.info("DDPG_Param_Noise alg parameters has been adapted.")
+        states = self.memory.get_init_states(self.memory.position_write - batch_size, self.memory.position_write)
+        perturbed_actions = self.memory.get_actions(self.memory.position_write - batch_size, self.memory.position_write)
         unperturbed_actions = []
         for state in states:
-            unperturbed_actions.append(self.select_action(state,perturb=False))
+            unperturbed_actions.append(self.select_action(state, perturb=False))
         ddpg_dist = ddpg_distance_metric(np.array(perturbed_actions), np.array(unperturbed_actions))
         self.param_noise.adapt(ddpg_dist)
 
