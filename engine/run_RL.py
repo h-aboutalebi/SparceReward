@@ -3,6 +3,11 @@ import torch
 import numpy as np
 import time
 
+try:
+    import cPickle as pk
+except:
+    import pickle as pk
+
 from engine.utils.env_tools import get_current_pose
 
 logger = logging.getLogger(__name__)
@@ -11,7 +16,7 @@ logger = logging.getLogger(__name__)
 class Run_RL():
 
     def __init__(self, reward_modifier, num_steps, memory, update_interval, eval_interval,
-                 mini_batch_size, agent, env):
+                 mini_batch_size, agent, env, path_file_result):
         self.num_steps = num_steps
         self.update_interval = update_interval
         self.eval_interval = eval_interval
@@ -23,6 +28,8 @@ class Run_RL():
         self.nb_env_reset = 0
         self.reward_modifier = reward_modifier
         self.initial_x = None
+        self.result = []
+        self.path_file_result = path_file_result
 
     def run(self, start_time, writer):
         logger.info("Learning has started ...")
@@ -49,17 +56,22 @@ class Run_RL():
             self.memory.add((states[-2], states[-1], action, reward, done))
             total_reward += reward
             total_modified_reward += modified_reward
-            self.update_agent(step_number, writer,env_is_reset)
+            self.update_agent(step_number, writer, env_is_reset)
             start_time = self.evaluate_policy(start_time, step_number, writer)
             if (step_number % 10 == 0):
                 writer.add_scalar('raw_reward/train', total_reward, step_number)
                 writer.add_scalar('mod_reward/train', total_modified_reward, step_number)
+        self.save_results()
 
-    def update_agent(self, step_number, writer,env_is_reset):
+    def save_results(self):
+        with open(self.path_file_result, "wb") as input_file:
+            pk.dump(self.result, input_file)
+
+    def update_agent(self, step_number, writer, env_is_reset):
         if (step_number % self.update_interval == 0 and step_number > self.mini_batch_size):
             # logger.info("Target policy agent has been updated")
             self.agent.train(replay_buffer=self.memory, writer=writer,
-                             step_number=step_number,batch_size=self.mini_batch_size,
+                             step_number=step_number, batch_size=self.mini_batch_size,
                              env_reset=env_is_reset)
 
     # This function evaluates the target policy if the eval_interval has reached
@@ -83,10 +95,12 @@ class Run_RL():
                 if done:
                     break
             time_elapsed = time.time() - start_time
+            self.result.append({"step_nb": step_number, "raw_reward": total_reward, "mod_reward": total_modified_reward})
             logger.info("Elapsed time:{} | Number of steps: {} | Raw reward: {} | Modified reward: {}"
                         .format(time_elapsed, step_number, total_reward, total_modified_reward))
             writer.add_scalar('raw_reward/test', total_reward, step_number)
             writer.add_scalar('mod_reward/test', total_modified_reward, step_number)
+            self.save_results()
             return time.time()
         self.timesteps_since_eval += 1
         return start_time

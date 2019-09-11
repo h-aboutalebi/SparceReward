@@ -150,10 +150,12 @@ logger.info("device is set for: {}".format(device))
 logger.info("Creating Agent ...")
 memory = ReplayBuffer(args.buffer_size)
 # sets agent type:
-agent = get_agent_type(state_dim, action_dim, max_action, args, env, memory,device)
+agent = get_agent_type(state_dim, action_dim, max_action, args, env, memory, device)
 reward_modifier = Reward_Zero_Sparce(env, args.threshold_sparcity, args.sparse_reward)
+path_file_result = file_path_results + "/results.pkl"
 new_run = Run_RL(reward_modifier=reward_modifier, num_steps=int(args.num_steps), update_interval=args.update_interval,
                  eval_interval=args.eval_interval,
-                 mini_batch_size=args.mini_batch_size, agent=agent, env=env, memory=memory)
+                 mini_batch_size=args.mini_batch_size, agent=agent, env=env, memory=memory,
+                 path_file_result=path_file_result)
 start_time = time.time()
 new_run.run(start_time, writer)
