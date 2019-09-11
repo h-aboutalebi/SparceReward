@@ -56,7 +56,7 @@ parser.add_argument('--threshold_sparcity', type=float, default=1.15, metavar='G
 # *********************************** Algorithm Setting ********************************************
 
 parser.add_argument('--algo', default='DDPG',
-                    help='algorithm to use: DDPG | DDPG_PARAM | DIV_DDPG | POLYRL_DDPG')
+                    help='algorithm to use: DDPG | DDPG_PARAM | DDPG_POLYRL')
 
 # *********************************** DDPG Setting ********************************************
 
