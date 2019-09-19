@@ -72,8 +72,8 @@ class DDPGPolyRL(AbstractAgent):
     def select_action(self, state, tensor_board_writer=None, previous_action=None, step_number=None):
         state = np.array(state)
         state = torch.Tensor(state.reshape(1, -1)).to(self.device)
-        action = self.poly_rl_alg.select_action(state, previous_action, tensor_board_writer=tensor_board_writer, step_number=step_number).clamp(-1, 1)
-        action = action.reshape(-1).numpy()
+        action = self.poly_rl_alg.select_action(state, previous_action, tensor_board_writer=tensor_board_writer, step_number=step_number)
+        action = torch.clamp(action,-1,1).reshape(-1).numpy()
         if (self.previous_state is not None):
             self.poly_rl_alg.update_parameters(previous_state=self.previous_state, new_state=state,
                                                tensor_board_writer=tensor_board_writer)

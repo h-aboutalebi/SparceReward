@@ -50,17 +50,17 @@ class PolyRL():
                 tensor_board_writer.add_scalar('number_of_time_target_policy__exploration_is_called', self.number_of_time_target_policy_is_called,
                                                step_number)
                 action = self.actor_target_function(state)
-                return action
+                action = action
             else:
                 self.should_use_target_policy = False
                 self.eta = abs(np.random.normal(self.lambda_, np.sqrt(self.sigma_squared)))
-                return self.sample_action_algorithm(previous_action)
+                action = self.sample_action_algorithm(previous_action)
         elif (self.t == 0):
-            return torch.Tensor(1, self.nb_actions).uniform_(self.min_action_limit, self.max_action_limit)
+            action = torch.Tensor(1, self.nb_actions).uniform_(self.min_action_limit, self.max_action_limit)
 
         elif (((self.delta_g < self.U) and (self.delta_g > self.L) and (self.C_theta > 0)) or self.i == 1):
             self.eta = abs(np.random.normal(self.lambda_, np.sqrt(self.sigma_squared)))
-            return self.sample_action_algorithm(previous_action)
+            action = self.sample_action_algorithm(previous_action)
 
         else:
             self.number_of_time_target_policy_is_called += 1
@@ -69,7 +69,8 @@ class PolyRL():
             action = self.actor_target_function(state)
             self.reset_parameters_PolyRL()
             self.should_use_target_policy = True
-            return action
+            action = action
+        return torch.Tensor(action)
 
     # This function resets parameters of PolyRl every episode. Should be called in the beggining of every episode
     def reset_parameters_in_beginning_of_episode(self, episode_number):
@@ -90,11 +91,11 @@ class PolyRL():
         self.eta = None
 
     def sample_action_algorithm(self, previous_action):
-        previous_action = previous_action.cpu()
-        P = torch.FloatTensor(previous_action.shape[1]).uniform_(float(self.min_action_limit), float(self.max_action_limit))
-        D = torch.dot(P, previous_action.reshape(-1)).item()
-        norm_previous_action = np.linalg.norm(previous_action.numpy(), ord=2)
-        V_p = (D / norm_previous_action ** 2) * previous_action
+        previous_action = previous_action
+        P = torch.FloatTensor(previous_action).uniform_(float(self.min_action_limit), float(self.max_action_limit))
+        D = torch.dot(P, torch.Tensor(previous_action.reshape(-1))).item()
+        norm_previous_action = np.linalg.norm(previous_action, ord=2)
+        V_p = torch.Tensor((D / norm_previous_action ** 2) * previous_action)
         V_r = P - V_p
         l = np.linalg.norm(V_p.numpy(), ord=2) * np.tan(self.eta)
         k = l / np.linalg.norm(V_r.numpy(), ord=2)
@@ -105,7 +106,7 @@ class PolyRL():
             action = -Q
         action = np.clip(action.numpy(), self.min_action_limit, self.max_action_limit)
         self.i += 1
-        return torch.from_numpy(action).reshape(1, action.shape[1])
+        return torch.from_numpy(action)
 
     def update_parameters(self, previous_state, new_state, tensor_board_writer=None):
         self.w_old = self.w_new
@@ -139,7 +140,7 @@ class PolyRL():
 
             self.L = (1 - np.sqrt(2 * self.epsilon)) * (
                     self.b / self.i + (((self.i - 1) * (self.i - 2)) / self.i ** 2) * self.b * self.compute_correlation_decay() + (
-                        1 / self.i ** 3) * norm_B_vector ** 2) - last_term
+                    1 / self.i ** 3) * norm_B_vector ** 2) - last_term
 
             self.L = max(0, self.L)
 
