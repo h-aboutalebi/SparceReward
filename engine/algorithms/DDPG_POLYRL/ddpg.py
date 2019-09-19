@@ -48,12 +48,12 @@ class Critic(nn.Module):
 
 class DDPGPolyRL(AbstractAgent):
     def __init__(self, state_dim, action_dim, max_action, expl_noise, action_high, action_low, tau, device, gamma, betta,
-                 epsilon, sigma_squared, lambda_,nb_actions,nb_observations,min_action):
+                 epsilon, sigma_squared, lambda_, nb_actions, nb_observations, min_action):
         super(DDPGPolyRL, self).__init__(state_dim=state_dim, action_dim=action_dim,
-                                   max_action=max_action, device=device)
+                                         max_action=max_action, device=device)
         self.poly_rl_alg = PolyRL(gamma=gamma, betta=betta, epsilon=epsilon, sigma_squared=sigma_squared,
-                                  actor_target_function=self.select_action_target, lambda_=lambda_,nb_actions=nb_actions,
-                                  nb_observations=nb_observations,max_action=max_action,min_action=min_action)
+                                  actor_target_function=self.select_action_target, lambda_=lambda_, nb_actions=nb_actions,
+                                  nb_observations=nb_observations, max_action=max_action, min_action=min_action)
         self.expl_noise = expl_noise
         self.action_dim = action_dim
         self.action_high = action_high
@@ -67,12 +67,17 @@ class DDPGPolyRL(AbstractAgent):
         self.critic_target = Critic(state_dim, action_dim).to(self.device)
         self.critic_target.load_state_dict(self.critic.state_dict())
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), weight_decay=1e-2)
+        self.previous_state = None
 
     def select_action(self, state, tensor_board_writer=None, previous_action=None, step_number=None):
         state = np.array(state)
         state = torch.Tensor(state.reshape(1, -1)).to(self.device)
         action = self.poly_rl_alg.select_action(state, previous_action, tensor_board_writer=tensor_board_writer, step_number=step_number).clamp(-1, 1)
-        action=action.reshape(-1).numpy()
+        action = action.reshape(-1).numpy()
+        if (self.previous_state is not None):
+            self.poly_rl_alg.update_parameters(previous_state=self.previous_state, new_state=state,
+                                               tensor_board_writer=tensor_board_writer)
+        self.previous_state = state
         return action
 
     def select_action_target(self, state, previous_action=None, tensor_board_writer=None, step_number=None):
