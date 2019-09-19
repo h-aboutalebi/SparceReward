@@ -49,7 +49,7 @@ class SAC(AbstractAgent):
                 self.device)
             self.policy_optim = Adam(self.policy.parameters(), lr=lr)
 
-    def select_action(self, state, tensor_board_writer=None, step_number=None):
+    def select_action(self, state, tensor_board_writer=None, step_number=None,previous_action=None):
         self.counter_actions += 1
         state = torch.Tensor(state).reshape(1, -1)
         action, _, _ = self.policy.sample(state)
@@ -58,7 +58,7 @@ class SAC(AbstractAgent):
         else:
             return self.action_space.sample().cpu()
 
-    def select_action_target(self, state, tensor_board_writer=None, step_number=None):
+    def select_action_target(self, state, tensor_board_writer=None, step_number=None,previous_action=None):
         state = torch.Tensor(state).reshape(1, -1)
         _, _, action = self.policy.sample(state)
         return action.detach().cpu().numpy()[0]
