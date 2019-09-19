@@ -10,4 +10,4 @@ At current version, we only offer Mujoco environment for tests. Current supporte
 
 3- ...
 
-
+In the directory  ``engine/reward_modifier``, we provide different sparcity version for environments.
