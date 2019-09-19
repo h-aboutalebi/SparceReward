@@ -56,7 +56,7 @@ parser.add_argument('--threshold_sparcity', type=float, default=1.15, metavar='G
 # *********************************** Algorithm Setting ********************************************
 
 parser.add_argument('--algo', default='DDPG',
-                    help='algorithm to use: DDPG | DDPG_PARAM | DDPG_POLYRL')
+                    help='algorithm to use: DDPG | DDPG_PARAM | DDPG_POLYRL | SAC')
 
 # *********************************** DDPG Setting ********************************************
 
@@ -111,6 +111,21 @@ torch.manual_seed(args.seed)
 np.random.seed(args.seed)
 random.seed(args.seed)
 
+# *********************************** SAC Setting ********************************************
+
+parser.add_argument("--gamma_sac", default=0.99, type=float)  # Std of Gaussian exploration noise
+parser.add_argument("--tau_sac", default=0.005, type=float)  # Target network update rate
+parser.add_argument("--alpha_sac", default=0.2, type=float)  # Target network update rate
+parser.add_argument('--policy_sac', default="Gaussian",
+                    help='algorithm to use: Gaussian | Deterministic')
+
+args = parser.parse_args()
+
+# sets the seed for making it comparable with other implementations
+torch.manual_seed(args.seed)
+np.random.seed(args.seed)
+random.seed(args.seed)
+
 # *********************************** Logging Config ********************************************
 file_path_results = args.output_path + "/" + str(datetime.datetime.now()).replace(" ", "_")
 if not os.path.exists(args.output_path):
@@ -148,9 +163,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logger.info("device is set for: {}".format(device))
 
 logger.info("Creating Agent ...")
-memory = ReplayBuffer(args.buffer_size)
 # sets agent type:
-agent = get_agent_type(state_dim, action_dim, max_action, args, env, memory, device)
+agent, memory = get_agent_type(state_dim, action_dim, max_action, args, env, device)
 reward_modifier = Reward_Zero_Sparce(env, args.threshold_sparcity, args.sparse_reward)
 path_file_result = file_path_results + "/results.pkl"
 new_run = Run_RL(reward_modifier=reward_modifier, num_steps=int(args.num_steps), update_interval=args.update_interval,
