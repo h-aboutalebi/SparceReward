@@ -112,8 +112,8 @@ class PolyRL():
         self.w_old = self.w_new
         norm_w_old = np.linalg.norm(self.w_old.numpy(), ord=2)
         self.w_new = new_state - previous_state
-        norm_w_new = np.linalg.norm(self.w_new.numpy(), ord=2)
-        self.B_vector = self.B_vector + self.i * self.w_new
+        norm_w_new = np.linalg.norm(self.w_new, ord=2)
+        self.B_vector = self.B_vector + torch.Tensor(self.i * self.w_new)
         if (self.i != 1):
             Delta1 = previous_state - self.C_vector
             self.old_g = self.g
@@ -151,7 +151,7 @@ class PolyRL():
 
         self.number_of_time_PolyRL__update_parameter_is_called += 1
         self.b = ((self.i - 1) * self.b + norm_w_new ** 2) / self.i
-        self.C_vector = ((self.i - 1) * self.C_vector + previous_state) / self.i
+        self.C_vector = ((self.i - 1) * self.C_vector + torch.Tensor(previous_state)) / self.i
         self.t += 1
 
     def compute_correlation_decay(self):
