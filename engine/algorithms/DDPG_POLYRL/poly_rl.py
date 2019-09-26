@@ -12,7 +12,7 @@ import random
 # It is implemented based on psudo code of algorithm
 class PolyRL():
 
-    def __init__(self, gamma, nb_actions, nb_observations, max_action, min_action, lambda_=0.08, betta=0.001, epsilon=0.999, sigma_squared=0.04,
+    def __init__(self, gamma, nb_actions, nb_observations, max_action, min_action, lambda_=0.08, betta=0.001, epsilon=0, sigma_squared=0.04,
                  actor_target_function=None):
         self.epsilon = epsilon
         self.number_of_time_PolyRL__update_parameter_is_called = 0
@@ -58,7 +58,7 @@ class PolyRL():
         elif (self.t == 0):
             action = torch.Tensor(1, self.nb_actions).uniform_(self.min_action_limit, self.max_action_limit)
 
-        elif (((self.delta_g < self.U) and (self.delta_g > self.L) and (self.C_theta > 0)) or self.i == 1):
+        elif (((self.delta_g <= self.U) and (self.delta_g >= self.L) and (self.C_theta > 0)) or self.i == 1):
             self.eta = abs(np.random.normal(self.lambda_, np.sqrt(self.sigma_squared)))
             action = self.sample_action_algorithm(previous_action)
 
@@ -92,7 +92,7 @@ class PolyRL():
 
     def sample_action_algorithm(self, previous_action):
         previous_action = previous_action
-        P = torch.FloatTensor(previous_action).uniform_(float(self.min_action_limit), float(self.max_action_limit))
+        P = torch.FloatTensor(previous_action.shape[0]).uniform_(float(self.min_action_limit), float(self.max_action_limit))
         D = torch.dot(P, torch.Tensor(previous_action.reshape(-1))).item()
         norm_previous_action = np.linalg.norm(previous_action, ord=2)
         V_p = torch.Tensor((D / norm_previous_action ** 2) * previous_action)
