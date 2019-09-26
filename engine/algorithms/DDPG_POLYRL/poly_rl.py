@@ -29,16 +29,16 @@ class PolyRL():
         self.number_of_goal = 0
         self.i = 1
         self.g = 0
-        self.C_vector = torch.zeros(1, self.nb_observations)
+        self.C_vector = torch.zeros(self.nb_observations)
         self.delta_g = 0
         self.b = 0
-        self.B_vector = torch.zeros(1, self.nb_observations)
+        self.B_vector = torch.zeros(self.nb_observations)
         self.C_theta = 0.001
         self.L = -1
         self.U = 1
         self.t = 0  # to account for time step
-        self.w_old = torch.zeros(1, self.nb_observations)
-        self.w_new = torch.zeros(1, self.nb_observations)
+        self.w_old = torch.zeros( self.nb_observations)
+        self.w_new = torch.zeros(self.nb_observations)
         self.eta = None
         self.should_use_target_policy = False
 
@@ -78,16 +78,16 @@ class PolyRL():
         self.epsilon = 1 - np.exp(-self.betta * episode_number)
         self.i = 1
         self.g = 0
-        self.C_vector = torch.zeros(1, self.nb_observations)
+        self.C_vector = torch.zeros(self.nb_observations)
         self.delta_g = 0
         self.b = 0
-        self.B_vector = torch.zeros(1, self.nb_observations)
+        self.B_vector = torch.zeros(self.nb_observations)
         self.C_theta = 0.001
         self.L = -1
         self.U = 1
         self.t = 0  # to account for time step
-        self.w_old = torch.zeros(1, self.nb_observations)
-        self.w_new = torch.zeros(1, self.nb_observations)
+        self.w_old = torch.zeros(self.nb_observations)
+        self.w_new = torch.zeros( self.nb_observations)
         self.eta = None
 
     def sample_action_algorithm(self, previous_action):
@@ -111,11 +111,11 @@ class PolyRL():
     def update_parameters(self, previous_state, new_state, tensor_board_writer=None):
         self.w_old = self.w_new
         norm_w_old = np.linalg.norm(self.w_old.numpy(), ord=2)
-        self.w_new = new_state - previous_state
+        self.w_new = torch.Tensor(new_state - previous_state)
         norm_w_new = np.linalg.norm(self.w_new, ord=2)
         self.B_vector = self.B_vector + torch.Tensor(self.i * self.w_new)
         if (self.i != 1):
-            Delta1 = previous_state - self.C_vector
+            Delta1 = torch.Tensor(previous_state) - self.C_vector
             self.old_g = self.g
             self.g = ((self.i - 2) / (self.i - 1)) * self.g + (1 / self.i) * np.linalg.norm(Delta1.numpy(), ord=2) ** 2
             self.delta_g = self.g - self.old_g
