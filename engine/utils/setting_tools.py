@@ -40,3 +40,14 @@ def get_agent_type(state_dim, action_dim, max_action, args, env, device):
         raise NotImplementedError
     logger.info("Algorithm {} has been initialized".format(args.algo))
     return agent, memory
+
+
+def select_action_agent(state, previous_action, tensor_board_writer
+                                              , step_number,nb_environment_reset,agent):
+    if(type(agent).__name__=="DDPGPolyRL"):
+        return agent.select_action(state, tensor_board_writer=tensor_board_writer, previous_action=previous_action,
+                                   step_number=step_number,nb_environment_reset=nb_environment_reset)
+    else:
+        return agent.select_action(state, tensor_board_writer=tensor_board_writer, step_number=step_number)
+
+

@@ -54,6 +54,7 @@ class DDPGPolyRL(AbstractAgent):
         self.poly_rl_alg = PolyRL(gamma=gamma, betta=betta, epsilon=epsilon, sigma_squared=sigma_squared,
                                   actor_target_function=self.select_action_target, lambda_=lambda_, nb_actions=nb_actions,
                                   nb_observations=nb_observations, max_action=max_action, min_action=min_action)
+        self.nb_environment_reset=0
         self.expl_noise = expl_noise
         self.action_dim = action_dim
         self.action_high = action_high
@@ -69,8 +70,13 @@ class DDPGPolyRL(AbstractAgent):
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), weight_decay=1e-2)
         self.previous_state = None
 
-    def select_action(self, state, tensor_board_writer=None, previous_action=None, step_number=None):
+    def select_action(self, state, tensor_board_writer, previous_action, step_number, nb_environment_reset):
         state = np.array(state)
+        if(nb_environment_reset>self.nb_environment_reset):
+            self.nb_environment_reset=nb_environment_reset
+            self.previous_state=None
+            self.poly_rl_alg.reset_parameters_in_beginning_of_episode(self.nb_environment_reset)
+        self.nb_environment_reset = nb_environment_reset
         if (self.previous_state is not None):
             self.poly_rl_alg.update_parameters(previous_state=self.previous_state, new_state=state,
                                                tensor_board_writer=tensor_board_writer)

@@ -3,6 +3,8 @@ import torch
 import numpy as np
 import time
 
+from engine.utils.setting_tools import select_action_agent
+
 try:
     import cPickle as pk
 except:
@@ -44,9 +46,11 @@ class Run_RL():
                 logger.debug("Environment has been reset (done is True). Counter = {}".format(self.nb_env_reset))
                 self.initial_x = get_current_pose(self.env)
                 states.append(self.env.reset())
+                if(self.nb_env_reset==3):
+                    print("adssads")
                 env_is_reset = False
-            action = self.agent.select_action(state=states[-1], previous_action=actions[-1], tensor_board_writer=writer
-                                              , step_number=step_number)
+            action = select_action_agent(state=states[-1], previous_action=actions[-1], tensor_board_writer=writer
+                                              , step_number=step_number,nb_environment_reset=self.nb_env_reset,agent=self.agent)
             next_state, reward, done, info_ = self.env.step(action)
             if (done):
                 env_is_reset = True

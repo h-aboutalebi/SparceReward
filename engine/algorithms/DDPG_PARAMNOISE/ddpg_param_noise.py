@@ -71,7 +71,7 @@ class DDPG_Param_Noise(AbstractAgent):
         self.critic_target.load_state_dict(self.critic.state_dict())
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), weight_decay=1e-2)
 
-    def select_action(self, state, tensor_board_writer=None, previous_action=None, step_number=None, perturb=True):
+    def select_action(self, state, tensor_board_writer=None, step_number=None, perturb=True):
         state = np.array(state)
         state = torch.Tensor(state.reshape(1, -1)).to(self.device)
         if (perturb):

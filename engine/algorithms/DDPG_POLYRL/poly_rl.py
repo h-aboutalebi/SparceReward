@@ -41,6 +41,7 @@ class PolyRL():
         self.w_new = torch.zeros(self.nb_observations)
         self.eta = None
         self.should_use_target_policy = False
+        self.nb_env_is_reset=0
 
     def select_action(self, state, previous_action, tensor_board_writer, step_number):
         if (self.should_use_target_policy is True):

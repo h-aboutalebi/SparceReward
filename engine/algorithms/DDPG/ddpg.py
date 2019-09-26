@@ -72,7 +72,7 @@ class DDPG(AbstractAgent):
                 self.action_low, self.action_high)
         return action
 
-    def select_action_target(self, state, previous_action=None, tensor_board_writer=None, step_number=None):
+    def select_action_target(self, state,  tensor_board_writer=None, step_number=None):
         state = np.array(state)
         state = torch.Tensor(state.reshape(1, -1)).to(self.device)
         return self.actor_target(state).cpu().data.numpy().flatten()
