@@ -37,18 +37,19 @@ class PolyRL():
         self.L = -1
         self.U = 1
         self.t = 0  # to account for time step
-        self.w_old = torch.zeros( self.nb_observations)
+        self.w_old = torch.zeros(self.nb_observations)
         self.w_new = torch.zeros(self.nb_observations)
         self.eta = None
         self.should_use_target_policy = False
-        self.nb_env_is_reset=0
+        self.nb_env_is_reset = 0
 
     def select_action(self, state, previous_action, tensor_board_writer, step_number):
         if (self.should_use_target_policy is True):
             k = random.uniform(0, 1)
             if (k <= self.epsilon):
                 self.number_of_time_target_policy_is_called += 1
-                tensor_board_writer.add_scalar('number_of_time_target_policy__exploration_is_called', self.number_of_time_target_policy_is_called,
+                tensor_board_writer.add_scalar('number_of_time_target_policy__exploration_is_called',
+                                               self.number_of_time_target_policy_is_called / step_number,
                                                step_number)
                 action = self.actor_target_function(state)
                 action = action
@@ -90,7 +91,7 @@ class PolyRL():
         self.U = 1
         self.t = 0  # to account for time step
         self.w_old = torch.zeros(self.nb_observations)
-        self.w_new = torch.zeros( self.nb_observations)
+        self.w_new = torch.zeros(self.nb_observations)
         self.eta = None
 
     def sample_action_algorithm(self, previous_action):
