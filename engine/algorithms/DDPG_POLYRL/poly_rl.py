@@ -71,6 +71,8 @@ class PolyRL():
             self.reset_parameters_PolyRL()
             self.should_use_target_policy = True
             action = action
+        if self.number_of_time_target_policy_is_called>0 or self.number_of_time_PolyRL__update_parameter_is_called>0:
+            print(self.number_of_time_target_policy_is_called/(self.number_of_time_PolyRL__update_parameter_is_called+self.number_of_time_target_policy_is_called))
         return torch.Tensor(action)
 
     # This function resets parameters of PolyRl every episode. Should be called in the beggining of every episode

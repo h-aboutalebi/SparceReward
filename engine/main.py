@@ -98,7 +98,7 @@ parser.add_argument('--exploration_end', type=int, default=100, metavar='N',
 
 parser.add_argument('--betta', type=float, default=0.0001)
 
-parser.add_argument('--epsilon', type=float, default=0.999)
+parser.add_argument('--epsilon', type=float, default=0)
 
 parser.add_argument('--sigma_squared', type=float, default=0.00007)
 
