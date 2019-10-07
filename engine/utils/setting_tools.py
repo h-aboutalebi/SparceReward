@@ -50,4 +50,9 @@ def select_action_agent(state, previous_action, tensor_board_writer
     else:
         return agent.select_action(state, tensor_board_writer=tensor_board_writer, step_number=step_number)
 
+def post_update_agent(agent,previous_state,next_state,writer):
+    if (type(agent).__name__ == "DDPGPolyRL"):
+        agent.poly_rl_alg.update_parameters(previous_state=previous_state, new_state=next_state,
+                                                 tensor_board_writer=writer)
+
 

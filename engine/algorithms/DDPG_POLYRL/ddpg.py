@@ -77,9 +77,6 @@ class DDPGPolyRL(AbstractAgent):
             self.previous_state=None
             self.poly_rl_alg.reset_parameters_in_beginning_of_episode(self.nb_environment_reset)
         self.nb_environment_reset = nb_environment_reset
-        if (self.previous_state is not None):
-            self.poly_rl_alg.update_parameters(previous_state=self.previous_state, new_state=state,
-                                               tensor_board_writer=tensor_board_writer)
         self.previous_state = state
         state = torch.Tensor(state.reshape(1, -1)).to(self.device)
         action = self.poly_rl_alg.select_action(state, previous_action, tensor_board_writer=tensor_board_writer, step_number=step_number)
