@@ -3,7 +3,7 @@ import torch
 import numpy as np
 import time
 
-from engine.utils.setting_tools import select_action_agent, post_update_agent
+from engine.utils.setting_tools import select_action_agent, post_update_agent, select_action_target
 
 try:
     import cPickle as pk
@@ -92,7 +92,8 @@ class Run_RL():
             actions = [None]
             self.timesteps_since_eval = 0
             while (True):
-                action = self.agent.select_action_target(state=state, previous_action=actions[-1], tensor_board_writer=writer)
+                action = select_action_target(state=state, previous_action=actions[-1], tensor_board_writer=writer
+                                         , step_number=step_number, nb_environment_reset=self.nb_env_reset, agent=self.agent)
                 state, reward, done, info_ = self.env.step(action)
                 total_reward += reward
                 actions.append(action)
