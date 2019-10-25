@@ -54,7 +54,7 @@ def select_action_target(state, previous_action, tensor_board_writer
                                               , step_number,nb_environment_reset,agent):
     if(type(agent).__name__=="DDPGPolyRL"):
         return agent.select_action_target(state, tensor_board_writer=tensor_board_writer, previous_action=previous_action,
-                                   step_number=step_number,nb_environment_reset=nb_environment_reset)
+                                   step_number=step_number)
     else:
         return agent.select_action_target(state, tensor_board_writer=tensor_board_writer, step_number=step_number)
 
