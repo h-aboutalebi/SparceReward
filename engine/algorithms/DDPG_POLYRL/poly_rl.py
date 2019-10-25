@@ -44,7 +44,12 @@ class PolyRL():
         self.nb_env_is_reset = 0
 
     def select_action(self, state, previous_action, tensor_board_writer, step_number):
-        if (self.should_use_target_policy is True):
+
+        if (self.t == 0):
+            action = torch.Tensor(1, self.nb_actions).uniform_(self.min_action_limit, self.max_action_limit)
+            #print('first action is selected at random (must happen ONLY at the beginning of each episode)')
+
+        elif (self.should_use_target_policy is True):
             k = random.uniform(0, 1)
             if (k <= self.epsilon):
                 self.number_of_time_target_policy_is_called += 1
@@ -60,10 +65,6 @@ class PolyRL():
                 #print('PolyRL is called (After target policy having been called)')
                 self.eta = abs(np.random.normal(self.lambda_, np.sqrt(self.sigma_squared)))
                 action = self.sample_action_algorithm(previous_action)
-        elif (self.t == 0):
-            action = torch.Tensor(1, self.nb_actions).uniform_(self.min_action_limit, self.max_action_limit)
-            #print('first action is selected at random (must happen ONLY at the beginning of each episode)')
-
         elif (((self.delta_g <= self.U) and (self.delta_g >= self.L) and (self.C_theta > 0)) or self.i == 1):
             #print('PolyRL is called (delta_g is in range or i =1)')
             self.eta = abs(np.random.normal(self.lambda_, np.sqrt(self.sigma_squared)))
