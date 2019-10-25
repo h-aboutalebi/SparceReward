@@ -182,7 +182,7 @@ class PolyRL():
         #print('t = ',self.t)
 
     def compute_correlation_decay(self):
-        if (self.C_theta == 1):
+        if (self.C_theta == 1 or self.C_theta<0):
             return 1
         else:
             Lp = 1 / np.log(self.C_theta)
