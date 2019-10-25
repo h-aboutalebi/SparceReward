@@ -5,6 +5,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 
 from engine.algorithms.DDPG_POLYRL.poly_rl import PolyRL
+#from engine.algorithms.DDPG_POLYRL.poly_rl_torch import PolyRL
 from engine.algorithms.abstract_agent import AbstractAgent
 
 
@@ -78,8 +79,8 @@ class DDPGPolyRL(AbstractAgent):
             self.poly_rl_alg.reset_parameters_in_beginning_of_episode(self.nb_environment_reset)
         self.nb_environment_reset = nb_environment_reset
         self.previous_state = state
-        state = torch.Tensor(state.reshape(1, -1)).to(self.device)
         action = self.poly_rl_alg.select_action(state, previous_action, tensor_board_writer=tensor_board_writer, step_number=step_number)
+        state = torch.Tensor(state.reshape(1, -1)).to(self.device)
         action = torch.clamp(action,-1,1).reshape(-1).numpy()
         return action
 
