@@ -33,14 +33,15 @@ class Create_Graph:
         return xnew, np.array(ysmoothed)
 
     def plot_figure(self, arr):
+        # plt.yscale('log')
+        plt.tight_layout()
+        fig = plt.figure()
         plt.xlabel('Episodes')
         plt.ylabel('Reward')
-        # plt.yscale('log')
         plt.xscale('log')
-        fig = plt.figure()
         plt.plot(self.x_new_values, arr, "b", label=self.name)
         plt.legend(loc='upper left')
-        fig.savefig(self.image_path)
+        fig.savefig(self.image_path, bbox_inches="tight")
 
 
 # Create_Graph("/Users/hosseinaboutalebi/results_exploration_policy/2019-11-23_22:04:40.982046/results.pkl",
