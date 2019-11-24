@@ -81,7 +81,8 @@ class PolyRL():
             action = action
         #if step_number > 0:
         #    print('target_percentage = ', self.number_of_time_target_policy_is_called/(step_number+1))
-        tensor_board_writer.add_scalar('Percentage_target_policy__exploration_is_called',
+        if(step_number%1000==0 and tensor_board_writer.STOP==False):
+            tensor_board_writer.add_scalar('Percentage_target_policy__exploration_is_called',
                                        self.number_of_time_target_policy_is_called / (step_number + 1),
                                        step_number + 1)
         return torch.Tensor(action)
@@ -166,7 +167,7 @@ class PolyRL():
             #self.L = max(0, self.L)
             if self.L != self.L :
                 self.L = -1
-            else:
+            elif(tensor_board_writer.STOP==False):
                 tensor_board_writer.add_scalar('Delta_bounds_U-L_PolyRL', self.U - self.L,
                                                self.number_of_time_PolyRL__update_parameter_is_called)
 

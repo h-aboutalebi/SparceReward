@@ -64,7 +64,7 @@ class Run_RL():
             total_modified_reward += modified_reward
             self.update_agent(step_number, writer, env_is_reset)
             start_time = self.evaluate_policy(start_time, step_number, writer)
-            if (step_number % 10 == 0):
+            if (step_number % 10 == 0 and writer.STOP==False):
                 writer.add_scalar('raw_reward/train', total_reward, step_number)
                 writer.add_scalar('mod_reward/train', total_modified_reward, step_number)
         self.save_results()
@@ -105,8 +105,9 @@ class Run_RL():
             self.result.append({"step_nb": step_number, "raw_reward": total_reward, "mod_reward": total_modified_reward})
             logger.info("Elapsed time:{} | Number of steps: {} | Raw reward: {} | Modified reward: {}"
                         .format(time_elapsed, step_number, total_reward, total_modified_reward))
-            writer.add_scalar('raw_reward/test', total_reward, step_number)
-            writer.add_scalar('mod_reward/test', total_modified_reward, step_number)
+            if(writer.STOP==False):
+                writer.add_scalar('raw_reward/test', total_reward, step_number)
+                writer.add_scalar('mod_reward/test', total_modified_reward, step_number)
             self.save_results()
             return time.time()
         self.timesteps_since_eval += 1
