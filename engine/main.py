@@ -67,6 +67,8 @@ parser.add_argument('--algo', default='DDPG',
 # This is the factor for updating the target policy with delay based on behavioural policy
 parser.add_argument("--expl_noise", default=0.1, type=float)  # Std of Gaussian exploration noise
 
+parser.add_argument("--lr_actor", default=1e-4, type=float)  # Std of Gaussian exploration noise
+
 parser.add_argument("--tau", default=0.005, type=float)  # Target network update rate)
 
 parser.add_argument('--buffer_size', type=int, default=1e6)

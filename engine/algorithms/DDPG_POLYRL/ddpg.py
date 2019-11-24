@@ -49,7 +49,7 @@ class Critic(nn.Module):
 
 class DDPGPolyRL(AbstractAgent):
     def __init__(self, state_dim, action_dim, max_action, expl_noise, action_high, action_low, tau, device, gamma, betta,
-                 epsilon, sigma_squared, lambda_, nb_actions, nb_observations, min_action):
+                 epsilon, sigma_squared, lambda_, nb_actions, nb_observations, min_action,lr_actor):
         super(DDPGPolyRL, self).__init__(state_dim=state_dim, action_dim=action_dim,
                                          max_action=max_action, device=device)
         self.poly_rl_alg = PolyRL(gamma=gamma, betta=betta, epsilon=epsilon, sigma_squared=sigma_squared,
@@ -64,7 +64,7 @@ class DDPGPolyRL(AbstractAgent):
         self.actor = Actor(state_dim, action_dim, max_action).to(self.device)
         self.actor_target = Actor(state_dim, action_dim, max_action).to(self.device)
         self.actor_target.load_state_dict(self.actor.state_dict())
-        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=1e-4)
+        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=lr_actor)
         self.critic = Critic(state_dim, action_dim).to(self.device)
         self.critic_target = Critic(state_dim, action_dim).to(self.device)
         self.critic_target.load_state_dict(self.critic.state_dict())
