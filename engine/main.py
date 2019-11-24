@@ -9,6 +9,7 @@ import re
 from engine.algorithms.DDPG.replay_memory import ReplayBuffer
 from engine.reward_modifier.reward_zero_sparce import Reward_Zero_Sparce
 from engine.run_RL import Run_RL
+from graphics import Create_Graph
 
 logger = logging.getLogger(__name__)
 import sys
@@ -28,7 +29,7 @@ parser.add_argument('-o', '--output_path', default=os.path.expanduser('~') + '/r
                     help='output path for files produced by the agent')
 parser.add_argument('--seed', type=int, default=4, metavar='N',
                     help='random seed (default: 4)')
-parser.add_argument('--del_tensor_file',  action='store_false',
+parser.add_argument('--del_tensor_file', action='store_false',
                     help='whether to delete the tensorboard file after run completes')
 
 # *********************************** Environment Setting ********************************************
@@ -152,8 +153,9 @@ try:
     writer = SummaryWriter(logdir=file_path_results)
 except:
     writer = SummaryWriter(file_path_results)
-if(args.del_tensor_file):
-    writer.STOP=True
+if (args.del_tensor_file):
+    writer.STOP = True
+    logger.info("Tensorboard is disabled!")
 
 # *********************************** Environment Building ********************************************
 env = gym.make(args.env_name)
@@ -178,9 +180,5 @@ new_run = Run_RL(reward_modifier=reward_modifier, num_steps=int(args.num_steps),
                  path_file_result=path_file_result)
 start_time = time.time()
 new_run.run(start_time, writer)
-# if(args.del_tensor_file):
-#     file_tensor_dir = list(writer.all_writers.keys())[0]
-#     pattern = "events.+"
-#     for f in os.listdir(file_tensor_dir):
-#         if re.search(pattern, f) and f != "log.txt":
-#             os.remove(os.path.join(file_tensor_dir, f))
+logger.info("results saved in file {}".format(path_file_result))
+Create_Graph(path_pkl=path_file_result, path_image=file_path_results, name=args.algo)
