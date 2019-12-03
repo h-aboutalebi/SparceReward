@@ -18,27 +18,25 @@ class Create_Graph:
     def get_results_from_file(self, path):
         with open(path, 'rb') as f:
             example_dict = pickle.load(f)
-            self.min_x_number = 0
-            self.max_x_number = len(example_dict)
-        self.x_new_values, power_smooth = self.make_smooth_line([x['mod_reward'] for x in example_dict])
+        self.x_new_values=[x['step_nb'] for x in example_dict]
+        power_smooth = self.make_smooth_line([x['mod_reward'] for x in example_dict])
         return power_smooth
 
     # implementation from https://stackoverflow.com/questions/5283649/plot-smooth-line-with-pyplot
     def make_smooth_line(self, list):
-        xnew = np.linspace(self.min_x_number, self.max_x_number,
-                           len(list))  # 300 represents number of points to make between T.min and T.max
+        # 300 represents number of points to make between T.min and T.max
         # spl = make_interp_spline(self.x_values, list, k=55)  # BSpline object
         # power_smooth = spl(xnew)
         ysmoothed = gaussian_filter1d(list, sigma=1)
-        return xnew, np.array(ysmoothed)
+        return np.array(ysmoothed)
 
     def plot_figure(self, arr):
         # plt.yscale('log')
         plt.tight_layout()
         fig = plt.figure()
-        plt.xlabel('Episodes')
+        plt.xlabel('Number of steps')
         plt.ylabel('Reward')
-        plt.xscale('log')
+        # plt.xscale('log')
         plt.plot(self.x_new_values, arr, "b", label=self.name)
         plt.legend(loc='upper left')
         fig.savefig(self.image_path, bbox_inches="tight")
