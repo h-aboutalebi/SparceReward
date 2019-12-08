@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.optim import SGD
-from torch.autograd import Variable
 from torch.nn.utils import clip_grad_norm_
 import torch.nn.functional as F
 import os
@@ -63,7 +62,7 @@ class Actor(nn.Module):
     def __init__(self, hidden_size, num_inputs, action_space):
         super(Actor, self).__init__()
         self.action_space = action_space
-        num_outputs = action_space.shape[0]
+        num_outputs = action_space
 
         self.linear1 = nn.Linear(num_inputs, hidden_size)
         self.ln1 = nn.LayerNorm(hidden_size)
@@ -92,7 +91,7 @@ class Critic(nn.Module):
     def __init__(self, hidden_size, num_inputs, action_space):
         super(Critic, self).__init__()
         self.action_space = action_space
-        num_outputs = action_space.shape[0]
+        num_outputs = action_space
 
         self.linear1 = nn.Linear(num_inputs, hidden_size)
         self.ln1 = nn.LayerNorm(hidden_size)
@@ -148,10 +147,11 @@ class DivDDPGActor(AbstractAgent):
     # This is where the behavioural policy is called
     def select_action(self, state, tensor_board_writer, step_number):
         self.actor.eval()
-        mu = self.actor((Variable(state)))
+        state=torch.from_numpy(state)
+        mu = self.actor((state))
         if self.expl_noise != 0:
-            mu = (mu + np.random.normal(0, self.expl_noise, size=self.action_dim)).clip(
-                self.action_low, self.action_high)
+            mu = (mu + torch.from_numpy(np.random.normal(0, self.expl_noise, size=self.action_dim)).clip(
+                self.action_low, self.action_high))
         self.actor.train()
         mu = mu.data
         return mu.clamp(-1, 1)
@@ -159,7 +159,7 @@ class DivDDPGActor(AbstractAgent):
     # This function samples from target policy for test
     def select_action_target(self, state, tensor_board_writer=None, step_number=None):
         self.actor_target.eval()
-        mu = self.actor_target((Variable(state).to(self.device)))
+        mu = self.actor_target((state.to(self.device)))
         self.actor_target.train()
         mu = mu.data
         return mu.clamp(-1, 1)
