@@ -65,10 +65,10 @@ class Actor(nn.Module):
         num_outputs = action_space
 
         self.linear1 = nn.Linear(num_inputs, hidden_size)
-        self.ln1 = nn.LayerNorm(hidden_size)
+        # self.ln1 = nn.LayerNorm(hidden_size)
 
         self.linear2 = nn.Linear(hidden_size, hidden_size)
-        self.ln2 = nn.LayerNorm(hidden_size)
+        # self.ln2 = nn.LayerNorm(hidden_size)
 
         self.mu = nn.Linear(hidden_size, num_outputs)
         self.mu.weight.data.mul_(0.1)
@@ -78,10 +78,10 @@ class Actor(nn.Module):
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         x = inputs.to(device)
         x = self.linear1(x)
-        x = self.ln1(x)
+        # x = self.ln1(x)
         x = F.relu(x)
         x = self.linear2(x)
-        x = self.ln2(x)
+        # x = self.ln2(x)
         x = F.relu(x)
         mu = F.tanh(self.mu(x))
         return mu
@@ -94,10 +94,10 @@ class Critic(nn.Module):
         num_outputs = action_space
 
         self.linear1 = nn.Linear(num_inputs, hidden_size)
-        self.ln1 = nn.LayerNorm(hidden_size)
+        # self.ln1 = nn.LayerNorm(hidden_size)
 
         self.linear2 = nn.Linear(hidden_size + num_outputs, hidden_size)
-        self.ln2 = nn.LayerNorm(hidden_size)
+        # self.ln2 = nn.LayerNorm(hidden_size)
 
         self.V = nn.Linear(hidden_size, 1)
         self.V.weight.data.mul_(0.1)
@@ -106,12 +106,12 @@ class Critic(nn.Module):
     def forward(self, inputs, actions):
         x = inputs
         x = self.linear1(x)
-        x = self.ln1(x)
+        # x = self.ln1(x)
         x = F.relu(x)
 
         x = torch.cat((x, actions), 1)
         x = self.linear2(x)
-        x = self.ln2(x)
+        # x = self.ln2(x)
         x = F.relu(x)
         V = self.V(x)
         return V
@@ -147,11 +147,11 @@ class DivDDPGActor(AbstractAgent):
     # This is where the behavioural policy is called
     def select_action(self, state, tensor_board_writer, step_number):
         self.actor.eval()
-        state=torch.from_numpy(state)
+        state=torch.from_numpy(state).float()
         mu = self.actor((state))
         if self.expl_noise != 0:
-            mu = (mu + torch.from_numpy(np.random.normal(0, self.expl_noise, size=self.action_dim)).clip(
-                self.action_low, self.action_high))
+            mu = (mu + torch.from_numpy(np.random.normal(0, self.expl_noise, size=self.action_dim)).clamp(
+                min(self.action_low), max(self.action_high)).float())
         self.actor.train()
         mu = mu.data
         return mu.clamp(-1, 1)
@@ -159,7 +159,7 @@ class DivDDPGActor(AbstractAgent):
     # This function samples from target policy for test
     def select_action_target(self, state, tensor_board_writer=None, step_number=None):
         self.actor_target.eval()
-        mu = self.actor_target((state.to(self.device)))
+        mu = self.actor_target(torch.Tensor(state).to(self.device))
         self.actor_target.train()
         mu = mu.data
         return mu.clamp(-1, 1)
