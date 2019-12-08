@@ -60,7 +60,7 @@ parser.add_argument('--threshold_sparcity', type=float, default=1.15, metavar='G
 # *********************************** Algorithm Setting ********************************************
 
 parser.add_argument('--algo', default='DDPG',
-                    help='Current supported algorithms to use: DDPG | DDPG_PARAM | '
+                    help='Current supported algorithms to use: DDPG | DDPG_DIV | DDPG_PARAM | '
                          'DDPG_POLYRL | SAC | SAC_POLYRL')
 
 # *********************************** DDPG Setting ********************************************
@@ -92,14 +92,9 @@ parser.add_argument('--initial_stdev', type=float, default=1e-4)
 
 # *********************************** DIV DDPG Setting ********************************************
 
-parser.add_argument('--diverse_noise', action='store_true')
+parser.add_argument('--linear_flag_div', action='store_true')
 
-parser.add_argument('--linear_diverse_noise', action='store_true')
-
-parser.add_argument('--phi', type=float, default=0.5)
-
-parser.add_argument('--exploration_end', type=int, default=100, metavar='N',
-                    help='number of episodes with noise (default: 100)')
+parser.add_argument('--phi_div', type=float, default=0.5)
 
 # *********************************** Poly_Rl Setting ********************************************
 

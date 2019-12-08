@@ -14,13 +14,16 @@ from engine.algorithms.abstract_agent import AbstractAgent
 
 logger = logging.getLogger(__name__)
 
+
 def soft_update(target, source, tau):
     for target_param, param in zip(target.parameters(), source.parameters()):
         target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
 
+
 def hard_update(target, source):
     for target_param, param in zip(target.parameters(), source.parameters()):
         target_param.data.copy_(param.data)
+
 
 """
 From: https://github.com/pytorch/pytorch/issues/1959
@@ -28,6 +31,8 @@ There's an official LayerNorm implementation in pytorch now, but it hasn't been 
 pip version yet. This is a temporary version
 This slows down training by a bit
 """
+
+
 class LayerNorm(nn.Module):
     def __init__(self, num_features, eps=1e-5, affine=True):
         super(LayerNorm, self).__init__()
@@ -49,6 +54,7 @@ class LayerNorm(nn.Module):
             shape = [1, -1] + [1] * (x.dim() - 2)
             y = self.gamma.view(*shape) * y + self.beta.view(*shape)
         return y
+
 
 nn.LayerNorm = LayerNorm
 
@@ -81,6 +87,7 @@ class Actor(nn.Module):
         mu = F.tanh(self.mu(x))
         return mu
 
+
 class Critic(nn.Module):
     def __init__(self, hidden_size, num_inputs, action_space):
         super(Critic, self).__init__()
@@ -90,7 +97,7 @@ class Critic(nn.Module):
         self.linear1 = nn.Linear(num_inputs, hidden_size)
         self.ln1 = nn.LayerNorm(hidden_size)
 
-        self.linear2 = nn.Linear(hidden_size+num_outputs, hidden_size)
+        self.linear2 = nn.Linear(hidden_size + num_outputs, hidden_size)
         self.ln2 = nn.LayerNorm(hidden_size)
 
         self.V = nn.Linear(hidden_size, 1)
@@ -110,16 +117,20 @@ class Critic(nn.Module):
         V = self.V(x)
         return V
 
+
 class DivDDPGActor(AbstractAgent):
-    def __init__(self, gamma, tau, hidden_size, lr_critic, lr_actor, state_dim, action_dim, max_action, device, phi=0.999,
-                 linear_flag=False):
+    def __init__(self, state_dim, action_dim, max_action,expl_noise,
+                 action_high, action_low, tau, device, lr_actor,phi=0.999, linear_flag=False,hidden_size=400):
         super().__init__(state_dim, action_dim, max_action, device)
         self.number_of_time_target_policy_is_called = 0
-        self.alpha=1
-        self.linear_flag=linear_flag
-        self.phi=phi
+        self.alpha = 1
+        self.expl_noise = expl_noise
+        self.linear_flag = linear_flag
+        self.action_low = action_low
+        self.action_high = action_high
+        self.phi = phi
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.poly_rl_alg=None
+        self.poly_rl_alg = None
         self.num_inputs = state_dim
         self.action_space = action_dim
         self.actor = Actor(hidden_size, self.num_inputs, self.action_space).to(self.device)
@@ -127,15 +138,15 @@ class DivDDPGActor(AbstractAgent):
         self.actor_optim = SGD(self.actor.parameters(), lr=lr_actor, momentum=0.9)
         self.critic = Critic(hidden_size, self.num_inputs, self.action_space).to(self.device)
         self.critic_target = Critic(hidden_size, self.num_inputs, self.action_space).to(self.device)
-        self.critic_optim = SGD(self.critic.parameters(), lr=lr_critic, momentum=0.9)
-        self.gamma = gamma
+        self.critic_optim = SGD(self.critic.parameters(), lr=lr_actor, momentum=0.9)
+        self.gamma = 0.99
         self.tau = tau
 
         hard_update(self.actor_target, self.actor)  # Make sure target is with the same weight
         hard_update(self.critic_target, self.critic)
 
-    #This is where the behavioural policy is called
-    def select_action(self, state, tensor_board_writer,step_number):
+    # This is where the behavioural policy is called
+    def select_action(self, state, tensor_board_writer, step_number):
         self.actor.eval()
         mu = self.actor((Variable(state)))
         if self.expl_noise != 0:
@@ -145,18 +156,15 @@ class DivDDPGActor(AbstractAgent):
         mu = mu.data
         return mu.clamp(-1, 1)
 
-
-    #This function samples from target policy for test
-    def select_action_target(self,state,  tensor_board_writer=None, step_number=None):
+    # This function samples from target policy for test
+    def select_action_target(self, state, tensor_board_writer=None, step_number=None):
         self.actor_target.eval()
         mu = self.actor_target((Variable(state).to(self.device)))
         self.actor_target.train()
         mu = mu.data
         return mu.clamp(-1, 1)
 
-
-
-    def train(self, replay_buffer,step_number,batch_size,writer,env_reset,delta=0.2):
+    def train(self, replay_buffer, step_number, batch_size, writer, env_reset, delta=0.2):
         x, y, u, r, d = replay_buffer.sample(batch_size)
         state_batch = torch.Tensor(x).to(self.device)
         action_batch = torch.Tensor(u).to(self.device)
@@ -167,12 +175,12 @@ class DivDDPGActor(AbstractAgent):
         next_state_action_values = self.critic_target(next_state_batch, next_action_batch)
         reward_batch = reward_batch.unsqueeze(1)
         mask_batch = mask_batch.unsqueeze(1)
-        pdist= nn.PairwiseDistance(p=2)
-        distance_diverse= pdist(action_batch, self.actor(state_batch))
-        distance_diverse=torch.clamp(distance_diverse,-delta,delta)
+        pdist = nn.PairwiseDistance(p=2)
+        distance_diverse = pdist(action_batch, self.actor(state_batch))
+        distance_diverse = torch.clamp(distance_diverse, -delta, delta)
         distance_diverse = torch.mean(distance_diverse)
         expected_state_action_batch = reward_batch + (self.gamma * mask_batch * next_state_action_values)
-        #updating critic network
+        # updating critic network
         self.critic_optim.zero_grad()
         state_action_batch = self.critic((state_batch), (action_batch))
         value_loss = F.mse_loss(state_action_batch, expected_state_action_batch)
@@ -180,30 +188,29 @@ class DivDDPGActor(AbstractAgent):
         clip_grad_norm_(self.critic.parameters(), 0.5)
         self.critic_optim.step()
 
-        #updating actor network
+        # updating actor network
         self.actor_optim.zero_grad()
-        if(self.linear_flag):
-            self.alpha=self.alpha*self.phi
-        policy_loss = -self.critic((state_batch),self.actor((state_batch)))
-        policy_loss_mean=policy_loss.mean()
-        policy_loss = policy_loss_mean-self.alpha*distance_diverse
+        if (self.linear_flag):
+            self.alpha = self.alpha * self.phi
+        policy_loss = -self.critic((state_batch), self.actor((state_batch)))
+        policy_loss_mean = policy_loss.mean()
+        policy_loss = policy_loss_mean - self.alpha * distance_diverse
         # logger.info("policy loss: {}| distance div: {}| alpha: {}".format(policy_loss_mean,distance_diverse,self.alpha))
         policy_loss.backward()
         clip_grad_norm_(self.actor.parameters(), 0.5)
         self.actor_optim.step()
 
-        #updating target policy networks with soft update
+        # updating target policy networks with soft update
         soft_update(self.actor_target, self.actor, self.tau)
-        norm_grad_actor_net=self.calculate_norm_grad(self.actor)
+        norm_grad_actor_net = self.calculate_norm_grad(self.actor)
         soft_update(self.critic_target, self.critic, self.tau)
         return value_loss.item(), policy_loss.item()
 
-    def calculate_norm_grad(self,net):
-        S=0
+    def calculate_norm_grad(self, net):
+        S = 0
         for p in list(filter(lambda p: p.grad is not None, net.parameters())):
-            S+=p.grad.data.norm(2).item()**2
+            S += p.grad.data.norm(2).item() ** 2
         return np.sqrt(S)
-
 
     def save_model(self, env_name, suffix="", actor_path=None, critic_path=None):
         if not os.path.exists('models/'):
