@@ -80,7 +80,6 @@ class DDPGPolyRL(AbstractAgent):
         self.nb_environment_reset = nb_environment_reset
         self.previous_state = state
         action = self.poly_rl_alg.select_action(state, previous_action, tensor_board_writer=tensor_board_writer, step_number=step_number)
-        state = torch.Tensor(state.reshape(1, -1)).to(self.device)
         action = torch.clamp(action,-1,1).reshape(-1).numpy()
         return action
 

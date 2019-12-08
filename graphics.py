@@ -24,9 +24,6 @@ class Create_Graph:
 
     # implementation from https://stackoverflow.com/questions/5283649/plot-smooth-line-with-pyplot
     def make_smooth_line(self, list):
-        # 300 represents number of points to make between T.min and T.max
-        # spl = make_interp_spline(self.x_values, list, k=55)  # BSpline object
-        # power_smooth = spl(xnew)
         ysmoothed = gaussian_filter1d(list, sigma=1)
         return np.array(ysmoothed)
 

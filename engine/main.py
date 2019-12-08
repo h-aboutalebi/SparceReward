@@ -60,7 +60,8 @@ parser.add_argument('--threshold_sparcity', type=float, default=1.15, metavar='G
 # *********************************** Algorithm Setting ********************************************
 
 parser.add_argument('--algo', default='DDPG',
-                    help='algorithm to use: DDPG | DDPG_PARAM | DDPG_POLYRL | SAC')
+                    help='Current supported algorithms to use: DDPG | DDPG_PARAM | '
+                         'DDPG_POLYRL | SAC | SAC_POLYRL')
 
 # *********************************** DDPG Setting ********************************************
 
@@ -110,20 +111,21 @@ parser.add_argument('--sigma_squared', type=float, default=0.00007)
 
 parser.add_argument('--lambda_', type=float, default=0.035)
 
-args = parser.parse_args()
-
-# sets the seed for making it comparable with other implementations
-torch.manual_seed(args.seed)
-np.random.seed(args.seed)
-random.seed(args.seed)
-
 # *********************************** SAC Setting ********************************************
 
 parser.add_argument("--gamma_sac", default=0.99, type=float)  # Std of Gaussian exploration noise
+
 parser.add_argument("--tau_sac", default=0.005, type=float)  # Target network update rate
+
 parser.add_argument("--alpha_sac", default=0.2, type=float)  # Target network update rate
-parser.add_argument('--policy_sac', default="Gaussian",
+
+parser.add_argument('--policy_sac', type=str, default="Gaussian",
                     help='algorithm to use: Gaussian | Deterministic')
+
+parser.add_argument('--start_steps', type=int, default=10000,
+                    help='algorithm to use: Gaussian | Deterministic')
+
+# *********************************** SAC_Poly_Rl Setting ********************************************
 
 args = parser.parse_args()
 
