@@ -59,7 +59,7 @@ class Run_RL():
             states.append(next_state)
             actions.append(action)
             modified_reward = self.reward_modifier.make_reward_sparse(reward, self.initial_x)
-            self.memory.add((states[-2], states[-1], action, reward, done))
+            self.memory.add((states[-2], states[-1], action, modified_reward, done))
             total_reward += reward
             total_modified_reward += modified_reward
             self.update_agent(step_number, writer, env_is_reset)
