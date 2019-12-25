@@ -44,8 +44,8 @@ class Run_RL():
             if (env_is_reset is True):
                 self.nb_env_reset += 1
                 logger.debug("Environment has been reset (done is True). Counter = {}".format(self.nb_env_reset))
-                self.initial_x = get_current_pose(self.env)
                 states.append(self.env.reset())
+                self.initial_x = get_current_pose(self.env)
                 env_is_reset = False
             # update_parameters()
             action = select_action_agent(state=states[-1], previous_action=actions[-1], tensor_board_writer=writer
@@ -87,8 +87,8 @@ class Run_RL():
         done = False
         if self.timesteps_since_eval >= self.eval_interval:
             logger.info("Evaluating target policy ...")
-            self.initial_x = get_current_pose(self.env)
             state = self.env.reset()
+            self.initial_x = get_current_pose(self.env)
             actions = [None]
             self.timesteps_since_eval = 0
             while (True):
