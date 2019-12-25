@@ -12,7 +12,7 @@ class Reward_Zero_Sparce():
         if (self.sparcity_flag is False):
             return reward
         current_x_pose = get_current_pose(self.env)
-        if (abs(current_x_pose - initial_x_pose) >= self.sparcity_thereshold):
+        if (current_x_pose - initial_x_pose >= self.sparcity_thereshold):
             return 1
         else:
             return 0
