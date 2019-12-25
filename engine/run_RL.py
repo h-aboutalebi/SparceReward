@@ -40,10 +40,14 @@ class Run_RL():
         states = []
         actions = [None]
         env_is_reset = True
+        previous_total_reward = 0
+        previous_total_modified_reward = 0
         for step_number in range(self.num_steps):
             if (env_is_reset is True):
                 self.nb_env_reset += 1
-                logger.debug("Environment has been reset (done is True). Counter = {}".format(self.nb_env_reset))
+                logger.debug("Environment has been reset (done is True). Counter = {} | Num_steps = {} | episode_tot_reward = {} | episode_tot_mod_reward = {}".format(self.nb_env_reset, step_number, total_reward - previous_total_reward, total_modified_reward - previous_total_modified_reward))
+                previous_total_reward = total_reward
+                previous_total_modified_reward = total_modified_reward
                 states.append(self.env.reset())
                 self.initial_x = get_current_pose(self.env)
                 env_is_reset = False
