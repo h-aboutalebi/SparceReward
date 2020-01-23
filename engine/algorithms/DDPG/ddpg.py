@@ -46,7 +46,7 @@ class Critic(nn.Module):
 
 
 class DDPG(AbstractAgent):
-    def __init__(self, state_dim, action_dim, max_action, expl_noise, action_high, action_low, tau,device):
+    def __init__(self, state_dim, action_dim, max_action, expl_noise, action_high, action_low, tau,device,lr_actor):
         super(DDPG, self).__init__(state_dim=state_dim, action_dim=action_dim,
                                    max_action=max_action,device=device)
         self.expl_noise = expl_noise
@@ -57,7 +57,7 @@ class DDPG(AbstractAgent):
         self.actor = Actor(state_dim, action_dim, max_action).to(self.device)
         self.actor_target = Actor(state_dim, action_dim, max_action).to(self.device)
         self.actor_target.load_state_dict(self.actor.state_dict())
-        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=1e-4)
+        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=lr_actor)
         self.critic = Critic(state_dim, action_dim).to(self.device)
         self.critic_target = Critic(state_dim, action_dim).to(self.device)
         self.critic_target.load_state_dict(self.critic.state_dict())
@@ -72,7 +72,8 @@ class DDPG(AbstractAgent):
                 self.action_low, self.action_high)
         return action
 
-    def select_action_target(self, state, previous_action=None, tensor_board_writer=None, step_number=None):
+    def select_action_target(self, state,  tensor_board_writer=None, step_number=None):
+        # print(state)
         state = np.array(state)
         state = torch.Tensor(state.reshape(1, -1)).to(self.device)
         return self.actor_target(state).cpu().data.numpy().flatten()

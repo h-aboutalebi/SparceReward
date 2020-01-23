@@ -3,6 +3,8 @@ import torch
 import numpy as np
 import time
 
+from engine.utils.setting_tools import select_action_agent, post_update_agent, select_action_target
+
 try:
     import cPickle as pk
 except:
@@ -38,27 +40,35 @@ class Run_RL():
         states = []
         actions = [None]
         env_is_reset = True
+        previous_total_reward = 0
+        previous_total_modified_reward = 0
         for step_number in range(self.num_steps):
             if (env_is_reset is True):
                 self.nb_env_reset += 1
-                logger.debug("Environment has been reset (done is True). Counter = {}".format(self.nb_env_reset))
-                self.initial_x = get_current_pose(self.env)
+                logger.debug("Environment has been reset (done is True). Counter = {} | Num_steps = {} | episode_tot_reward = {} | episode_tot_mod_reward = {}".format(self.nb_env_reset, step_number, total_reward - previous_total_reward, total_modified_reward - previous_total_modified_reward))
+                previous_total_reward = total_reward
+                previous_total_modified_reward = total_modified_reward
                 states.append(self.env.reset())
+                self.initial_x = get_current_pose(self.env)
                 env_is_reset = False
-            action = self.agent.select_action(state=states[-1], previous_action=actions[-1], tensor_board_writer=writer
-                                              , step_number=step_number)
+            # update_parameters()
+            action = select_action_agent(state=states[-1], previous_action=actions[-1], tensor_board_writer=writer
+                                         , step_number=step_number, nb_environment_reset=self.nb_env_reset, agent=self.agent)
             next_state, reward, done, info_ = self.env.step(action)
+
+            post_update_agent(agent=self.agent, previous_state=states[-1], next_state=next_state,
+                              writer=writer)
             if (done):
                 env_is_reset = True
             states.append(next_state)
             actions.append(action)
             modified_reward = self.reward_modifier.make_reward_sparse(reward, self.initial_x)
-            self.memory.add((states[-2], states[-1], action, reward, done))
+            self.memory.add((states[-2], states[-1], action, modified_reward, done))
             total_reward += reward
             total_modified_reward += modified_reward
             self.update_agent(step_number, writer, env_is_reset)
             start_time = self.evaluate_policy(start_time, step_number, writer)
-            if (step_number % 10 == 0):
+            if (step_number % 10 == 0 and writer.STOP==False):
                 writer.add_scalar('raw_reward/train', total_reward, step_number)
                 writer.add_scalar('mod_reward/train', total_modified_reward, step_number)
         self.save_results()
@@ -81,12 +91,13 @@ class Run_RL():
         done = False
         if self.timesteps_since_eval >= self.eval_interval:
             logger.info("Evaluating target policy ...")
-            self.initial_x = get_current_pose(self.env)
             state = self.env.reset()
+            self.initial_x = get_current_pose(self.env)
             actions = [None]
             self.timesteps_since_eval = 0
             while (True):
-                action = self.agent.select_action_target(state=state, previous_action=actions[-1], tensor_board_writer=writer)
+                action = select_action_target(state=state, previous_action=actions[-1], tensor_board_writer=writer
+                                         , step_number=step_number, nb_environment_reset=self.nb_env_reset, agent=self.agent)
                 state, reward, done, info_ = self.env.step(action)
                 total_reward += reward
                 actions.append(action)
@@ -98,8 +109,9 @@ class Run_RL():
             self.result.append({"step_nb": step_number, "raw_reward": total_reward, "mod_reward": total_modified_reward})
             logger.info("Elapsed time:{} | Number of steps: {} | Raw reward: {} | Modified reward: {}"
                         .format(time_elapsed, step_number, total_reward, total_modified_reward))
-            writer.add_scalar('raw_reward/test', total_reward, step_number)
-            writer.add_scalar('mod_reward/test', total_modified_reward, step_number)
+            if(writer.STOP==False):
+                writer.add_scalar('raw_reward/test', total_reward, step_number)
+                writer.add_scalar('mod_reward/test', total_modified_reward, step_number)
             self.save_results()
             return time.time()
         self.timesteps_since_eval += 1

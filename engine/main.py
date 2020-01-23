@@ -4,10 +4,12 @@ import datetime
 import time
 import logging
 import pickle
+import re
 
 from engine.algorithms.DDPG.replay_memory import ReplayBuffer
 from engine.reward_modifier.reward_zero_sparce import Reward_Zero_Sparce
 from engine.run_RL import Run_RL
+from graphics import Create_Graph
 
 logger = logging.getLogger(__name__)
 import sys
@@ -27,6 +29,8 @@ parser.add_argument('-o', '--output_path', default=os.path.expanduser('~') + '/r
                     help='output path for files produced by the agent')
 parser.add_argument('--seed', type=int, default=4, metavar='N',
                     help='random seed (default: 4)')
+parser.add_argument('--del_tensor_file', action='store_false',
+                    help='whether to delete the tensorboard file after run completes')
 
 # *********************************** Environment Setting ********************************************
 
@@ -48,7 +52,7 @@ parser.add_argument('--eval_interval', type=int, default=5.0e3, metavar='N',
 # *********************************** Reward Sparcity Setting ********************************************
 
 parser.add_argument('--sparse_reward', action='store_true',
-                    help='for making reward sparse. Default=True')
+                    help='for making reward sparse. Default=False')
 
 parser.add_argument('--threshold_sparcity', type=float, default=1.15, metavar='G',
                     help='threshold_sparcity for rewards (default: 0.15)')
@@ -56,12 +60,15 @@ parser.add_argument('--threshold_sparcity', type=float, default=1.15, metavar='G
 # *********************************** Algorithm Setting ********************************************
 
 parser.add_argument('--algo', default='DDPG',
-                    help='algorithm to use: DDPG | DDPG_PARAM | DDPG_POLYRL | SAC')
+                    help='Current supported algorithms to use: DDPG | DDPG_DIV | DDPG_PARAM | '
+                         'DDPG_POLYRL | SAC | SAC_POLYRL')
 
 # *********************************** DDPG Setting ********************************************
 
 # This is the factor for updating the target policy with delay based on behavioural policy
 parser.add_argument("--expl_noise", default=0.1, type=float)  # Std of Gaussian exploration noise
+
+parser.add_argument("--lr_actor", default=1e-4, type=float)  # Std of Gaussian exploration noise
 
 parser.add_argument("--tau", default=0.005, type=float)  # Target network update rate)
 
@@ -85,39 +92,35 @@ parser.add_argument('--initial_stdev', type=float, default=1e-4)
 
 # *********************************** DIV DDPG Setting ********************************************
 
-parser.add_argument('--diverse_noise', action='store_true')
+parser.add_argument('--linear_flag_div', action='store_true')
 
-parser.add_argument('--linear_diverse_noise', action='store_true')
-
-parser.add_argument('--phi', type=float, default=0.5)
-
-parser.add_argument('--exploration_end', type=int, default=100, metavar='N',
-                    help='number of episodes with noise (default: 100)')
+parser.add_argument('--phi_div', type=float, default=0.5)
 
 # *********************************** Poly_Rl Setting ********************************************
 
 parser.add_argument('--betta', type=float, default=0.0001)
 
-parser.add_argument('--epsilon', type=float, default=0.999)
+parser.add_argument('--epsilon', type=float, default=0)
 
 parser.add_argument('--sigma_squared', type=float, default=0.00007)
 
 parser.add_argument('--lambda_', type=float, default=0.035)
 
-args = parser.parse_args()
-
-# sets the seed for making it comparable with other implementations
-torch.manual_seed(args.seed)
-np.random.seed(args.seed)
-random.seed(args.seed)
-
 # *********************************** SAC Setting ********************************************
 
 parser.add_argument("--gamma_sac", default=0.99, type=float)  # Std of Gaussian exploration noise
+
 parser.add_argument("--tau_sac", default=0.005, type=float)  # Target network update rate
+
 parser.add_argument("--alpha_sac", default=0.2, type=float)  # Target network update rate
-parser.add_argument('--policy_sac', default="Gaussian",
+
+parser.add_argument('--policy_sac', type=str, default="Gaussian",
                     help='algorithm to use: Gaussian | Deterministic')
+
+parser.add_argument('--start_steps', type=int, default=10000,
+                    help='algorithm to use: Gaussian | Deterministic')
+
+# *********************************** SAC_Poly_Rl Setting ********************************************
 
 args = parser.parse_args()
 
@@ -149,6 +152,9 @@ try:
     writer = SummaryWriter(logdir=file_path_results)
 except:
     writer = SummaryWriter(file_path_results)
+if (args.del_tensor_file):
+    writer.STOP = True
+    logger.info("Tensorboard is disabled!")
 
 # *********************************** Environment Building ********************************************
 env = gym.make(args.env_name)
@@ -173,3 +179,5 @@ new_run = Run_RL(reward_modifier=reward_modifier, num_steps=int(args.num_steps),
                  path_file_result=path_file_result)
 start_time = time.time()
 new_run.run(start_time, writer)
+logger.info("results saved in file {}".format(path_file_result))
+Create_Graph(path_pkl=path_file_result, path_image=file_path_results, name=args.algo)
