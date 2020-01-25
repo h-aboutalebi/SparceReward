@@ -61,7 +61,7 @@ parser.add_argument('--threshold_sparcity', type=float, default=1.15, metavar='G
 
 parser.add_argument('--algo', default='DDPG',
                     help='Current supported algorithms to use: DDPG | DDPG_DIV | DDPG_PARAM | '
-                         'DDPG_POLYRL | DDPG_NO_NOISE | SAC | SAC_POLYRL')
+                         'DDPG_POLYRL | DDPG_NO_NOISE | DDPG_OU_NOISE | SAC | SAC_POLYRL')
 
 # *********************************** DDPG Setting ********************************************
 
@@ -80,6 +80,14 @@ parser.add_argument('--mini_batch_size', type=int, default=100, metavar='N',
                          'where batch size infers parallel processing. Here, we currently do not have that as'
                          'we update our parameters sequentially. Here, batch_size means minimum length that '
                          'memory replay should have before strating to update model parameters')
+
+# *********************************** DDPG OU NOISE Setting ********************************************
+
+parser.add_argument('--noise_scale', type=float, default=0.3, metavar='G',
+                    help='initial noise scale (default: 0.3)')
+
+parser.add_argument('--final_noise_scale', type=float, default=0.3, metavar='G',
+                    help='final noise scale (default: 0.3)')
 
 # *********************************** Param Noise DDPG Setting ********************************************
 

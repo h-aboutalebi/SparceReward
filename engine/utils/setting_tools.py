@@ -4,6 +4,7 @@ from engine.algorithms.DDPG.ddpg import DDPG
 from engine.algorithms.DDPG.replay_memory import ReplayBuffer
 from engine.algorithms.DDPG_DIV.ddpg_div import DivDDPGActor
 from engine.algorithms.DDPG_No_Noise.ddpg_no_noise import DDPG_No_Noise
+from engine.algorithms.DDPG_OU_NOISE.ddpg_ou_noise import DDPG_Ou_Noise
 from engine.algorithms.DDPG_PARAMNOISE.ddpg_param_noise import DDPG_Param_Noise
 from engine.algorithms.DDPG_POLYRL.ddpg import DDPGPolyRL
 from engine.algorithms.SAC.replay_momory import ReplayBuffer_SAC
@@ -26,6 +27,12 @@ def get_agent_type(state_dim, action_dim, max_action, args, env, device):
         agent = DDPG_No_Noise(state_dim, action_dim, max_action, expl_noise=args.expl_noise,
                      action_high=env.action_space.high, action_low=env.action_space.low, tau=args.tau,
                      device=device, lr_actor=args.lr_actor)
+    elif(args.algo=="DDPG_OU_NOISE"):
+        memory = ReplayBuffer(args.buffer_size)
+        agent = DDPG_Ou_Noise(state_dim, action_dim, max_action, expl_noise=args.expl_noise,
+                              action_high=env.action_space.high, action_low=env.action_space.low, tau=args.tau,
+                              device=device, lr_actor=args.lr_actor,noise_scale=args.noise_scale,
+                              num_steps=args.num_steps,final_noise_scale=args.final_noise_scale)
     elif (args.algo == "DDPG_DIV"):
         memory = ReplayBuffer(args.buffer_size)
         agent = DivDDPGActor(state_dim, action_dim, max_action, expl_noise=args.expl_noise,
@@ -82,7 +89,10 @@ def select_action_target(state, previous_action, tensor_board_writer
         return agent.select_action_target(state, tensor_board_writer=tensor_board_writer, step_number=step_number)
 
 
-def post_update_agent(agent, previous_state, next_state, writer):
+def post_update_agent(agent, previous_state, next_state, done,step_number,writer):
     if (type(agent).__name__ == "DDPGPolyRL" or type(agent).__name__ == "DDPGPolyRL"):
         agent.poly_rl_alg.update_parameters(previous_state=previous_state, new_state=next_state,
                                             tensor_board_writer=writer)
+    elif(type(agent).__name__ == "DDPG_Ou_Noise"):
+        if(done):
+            agent.update_action_noise(step_number)

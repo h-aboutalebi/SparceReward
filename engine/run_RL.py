@@ -57,7 +57,7 @@ class Run_RL():
             next_state, reward, done, info_ = self.env.step(action)
 
             post_update_agent(agent=self.agent, previous_state=states[-1], next_state=next_state,
-                              writer=writer)
+                              done=done,step_number=step_number,writer=writer)
             if (done):
                 env_is_reset = True
             states.append(next_state)
