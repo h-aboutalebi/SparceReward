@@ -3,6 +3,7 @@ import logging
 from engine.algorithms.DDPG.ddpg import DDPG
 from engine.algorithms.DDPG.replay_memory import ReplayBuffer
 from engine.algorithms.DDPG_DIV.ddpg_div import DivDDPGActor
+from engine.algorithms.DDPG_No_Noise.ddpg_no_noise import DDPG_No_Noise
 from engine.algorithms.DDPG_PARAMNOISE.ddpg_param_noise import DDPG_Param_Noise
 from engine.algorithms.DDPG_POLYRL.ddpg import DDPGPolyRL
 from engine.algorithms.SAC.replay_momory import ReplayBuffer_SAC
@@ -18,6 +19,11 @@ def get_agent_type(state_dim, action_dim, max_action, args, env, device):
     if (args.algo == "DDPG"):
         memory = ReplayBuffer(args.buffer_size)
         agent = DDPG(state_dim, action_dim, max_action, expl_noise=args.expl_noise,
+                     action_high=env.action_space.high, action_low=env.action_space.low, tau=args.tau,
+                     device=device, lr_actor=args.lr_actor)
+    elif (args.algo == "DDPG_NO_NOISE"):
+        memory = ReplayBuffer(args.buffer_size)
+        agent = DDPG_No_Noise(state_dim, action_dim, max_action, expl_noise=args.expl_noise,
                      action_high=env.action_space.high, action_low=env.action_space.low, tau=args.tau,
                      device=device, lr_actor=args.lr_actor)
     elif (args.algo == "DDPG_DIV"):
