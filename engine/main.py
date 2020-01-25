@@ -83,9 +83,6 @@ parser.add_argument('--mini_batch_size', type=int, default=100, metavar='N',
 
 # *********************************** DDPG OU NOISE Setting ********************************************
 
-parser.add_argument('--noise_scale', type=float, default=0.3, metavar='G',
-                    help='initial noise scale (default: 0.3)')
-
 parser.add_argument('--final_noise_scale', type=float, default=0.3, metavar='G',
                     help='final noise scale (default: 0.3)')
 

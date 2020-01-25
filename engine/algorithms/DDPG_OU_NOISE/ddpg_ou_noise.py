@@ -45,7 +45,7 @@ class DDPG_Ou_Noise(DDPG):
         state = np.array(state)
         state = torch.Tensor(state.reshape(1, -1)).to(self.device)
         action = self.actor(state).cpu().data.numpy().flatten()
-        return action+ self.action_noise
+        return action+ self.action_noise.noise()
 
     def update_action_noise(self,step_num):
         self.action_noise.scale = (self.noise_scale - self.final_noise_scale) * max(0, self.exploration_end -
