@@ -164,7 +164,7 @@ class DivDDPGActor(AbstractAgent):
         mu = self.actor_target(torch.Tensor(state).to(self.device))
         self.actor_target.train()
         mu = mu.data
-        return mu.clamp(-1, 1)
+        return mu.clamp(-1, 1).cpu()
 
     def train(self, replay_buffer, step_number, batch_size, writer, env_reset, delta=0.2):
         x, y, u, r, d = replay_buffer.sample(batch_size)
