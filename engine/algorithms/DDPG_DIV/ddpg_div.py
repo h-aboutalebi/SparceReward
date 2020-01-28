@@ -151,7 +151,7 @@ class DivDDPGActor(AbstractAgent):
         mu = self.actor((state))
         if self.expl_noise != 0:
             mu = (mu + torch.from_numpy(np.random.normal(0, self.expl_noise, size=self.action_dim)).clamp(
-                min(self.action_low).float(), max(self.action_high)).float())
+                min(self.action_low), max(self.action_high)))
         self.actor.train()
         mu = mu.data
         return mu.clamp(-1, 1)
