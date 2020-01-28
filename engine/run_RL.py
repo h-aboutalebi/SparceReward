@@ -54,7 +54,7 @@ class Run_RL():
             # update_parameters()
             action = select_action_agent(state=states[-1], previous_action=actions[-1], tensor_board_writer=writer
                                          , step_number=step_number, nb_environment_reset=self.nb_env_reset, agent=self.agent)
-            next_state, reward, done, info_ = self.env.step(action.cpu())
+            next_state, reward, done, info_ = self.env.step(action)
 
             post_update_agent(agent=self.agent, previous_state=states[-1], next_state=next_state,
                               done=done,step_number=step_number,writer=writer)
