@@ -60,7 +60,7 @@ class SAC(AbstractAgent):
 
     def select_action_target(self, state, tensor_board_writer=None, step_number=None,previous_action=None):
         state = torch.Tensor(state).reshape(1, -1)
-        _, _, action = self.policy.sample(state)
+        _, _, action = self.policy.sample(state.to(self.device))
         return action.detach().cpu().numpy()[0]
 
     def train(self, replay_buffer, batch_size, step_number, writer=None, env_reset=None):

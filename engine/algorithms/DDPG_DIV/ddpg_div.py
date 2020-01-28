@@ -150,11 +150,13 @@ class DivDDPGActor(AbstractAgent):
         state=torch.from_numpy(state).float()
         mu = self.actor((state))
         if self.expl_noise != 0:
-            mu = (mu + torch.from_numpy(np.random.normal(0, self.expl_noise, size=self.action_dim)).clamp(
-                min(self.action_low), max(self.action_high)).float())
+            # import ipdb;
+            # ipdb.set_trace()
+            mu = mu + torch.tensor(np.random.normal(0, self.expl_noise, size=self.action_dim)
+                                   .clip(min(self.action_low), max(self.action_high)),dtype=torch.float).to(self.device)
         self.actor.train()
         mu = mu.data
-        return mu.clamp(-1, 1)
+        return mu.clamp(-1, 1).cpu()
 
     # This function samples from target policy for test
     def select_action_target(self, state, tensor_board_writer=None, step_number=None):
@@ -162,7 +164,7 @@ class DivDDPGActor(AbstractAgent):
         mu = self.actor_target(torch.Tensor(state).to(self.device))
         self.actor_target.train()
         mu = mu.data
-        return mu.clamp(-1, 1)
+        return mu.clamp(-1, 1).cpu()
 
     def train(self, replay_buffer, step_number, batch_size, writer, env_reset, delta=0.2):
         x, y, u, r, d = replay_buffer.sample(batch_size)
