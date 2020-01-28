@@ -152,7 +152,8 @@ class DivDDPGActor(AbstractAgent):
         if self.expl_noise != 0:
             # import ipdb;
             # ipdb.set_trace()
-            mu = mu + torch.tensor(np.random.normal(0, self.expl_noise, size=self.action_dim).clip(min(self.action_low), max(self.action_high)),dtype=torch.float).cuda()
+            mu = mu + torch.tensor(np.random.normal(0, self.expl_noise, size=self.action_dim)
+                                   .clip(min(self.action_low), max(self.action_high)),dtype=torch.float).to(self.device)
         self.actor.train()
         mu = mu.data
         return mu.clamp(-1, 1)
