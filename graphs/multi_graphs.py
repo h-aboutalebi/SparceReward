@@ -15,8 +15,10 @@ result_folders = glob(directory_path + "/*/")
 # initilizes the config of plt
 colors = ['b', 'g', 'r', 'm', 'y', 'c']
 f = plt.figure(1)
-create_graph(target="mod_reward",plt_name=f,y_label="reward",x_label="step",result_folders=result_folders
-             ,colors=colors)
+create_graph(plt=plt, target="mod_reward", plt_figure=f, y_label="reward", x_label="step", result_folders=result_folders
+             , colors=colors)
 #### exploration graph in polyrl ####
 g = plt.figure(2)
+create_graph(plt=plt, target="mod_reward", plt_figure=g, y_label="reward", x_label="step", result_folders=result_folders
+             , colors=colors,smoothness=False, folder_name_cons="poly")
 
