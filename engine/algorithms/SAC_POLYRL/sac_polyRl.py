@@ -21,7 +21,7 @@ class SAC_Poly_RL(SAC):
         self.counter_actions += 1
         if (self.start_steps < self.counter_actions):
             state = torch.Tensor(state).reshape(1, -1)
-            action, _, _ = self.policy.sample(state)
+            action, _, _ = self.policy.sample(state.to(self.device))
             return action.detach().cpu().numpy()[0]
         else:
             state = np.array(state)
