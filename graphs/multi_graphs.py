@@ -36,10 +36,10 @@ for c, folder in enumerate(result_folders):
     for data in results:
         normalized_results.append(data[:min_y_axis])
     mean = np.mean(np.array(normalized_results), axis=0)
-    std = sem(np.array(normalized_results), axis=0)/3
+    std = np.std(np.array(normalized_results), axis=0)
     plt.plot(x, mean, colors[c],label=name_folder)
     plt.fill_between(x, mean - std, mean + std, edgecolor=colors[c],
-                     facecolor=colors[c], alpha=0.5,
+                     facecolor=colors[c], alpha=0.21,
                      linewidth=0)
     dict_results[name_folder] = {"mean": mean, "std": std}
 
