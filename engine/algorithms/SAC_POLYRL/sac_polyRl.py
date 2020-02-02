@@ -17,6 +17,9 @@ class SAC_Poly_RL(SAC):
                                   nb_observations=nb_observations, max_action=max_action, min_action=min_action)
         self.nb_environment_reset=0
 
+    def get_exploration_percentage(self):
+        return self.poly_rl_alg.percentage_exploration
+
     def mod_select_action(self, state, tensor_board_writer, previous_action, step_number, nb_environment_reset):
         self.counter_actions += 1
         if (self.start_steps < self.counter_actions):
@@ -24,6 +27,7 @@ class SAC_Poly_RL(SAC):
             action, _, _ = self.policy.sample(state.to(self.device))
             return action.detach().cpu().numpy()[0]
         else:
+            # print(self.counter_actions)
             state = np.array(state)
             if (nb_environment_reset > self.nb_environment_reset):
                 self.nb_environment_reset = nb_environment_reset

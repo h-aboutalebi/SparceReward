@@ -71,6 +71,9 @@ class DDPGPolyRL(AbstractAgent):
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), weight_decay=1e-2)
         self.previous_state = None
 
+    def get_exploration_percentage(self):
+        return self.poly_rl_alg.percentage_exploration
+
     def select_action(self, state, tensor_board_writer, previous_action, step_number, nb_environment_reset):
         state = np.array(state)
         if(nb_environment_reset>self.nb_environment_reset):
