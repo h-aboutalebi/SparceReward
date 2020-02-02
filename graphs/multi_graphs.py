@@ -19,6 +19,6 @@ create_graph(plt=plt, target="mod_reward", plt_figure=f, y_label="reward", x_lab
              , colors=colors)
 #### exploration graph in polyrl ####
 g = plt.figure(2)
-create_graph(plt=plt, target="poly_exploration", plt_figure=g, y_label="exploration percentage", x_label="step", result_folders=result_folders
+create_graph(plt=plt, target="poly_exploration", plt_figure=g, y_label="target policy percentage", x_label="step", result_folders=result_folders
              , colors=colors,smoothness=False, folder_name_cons="poly")
 
