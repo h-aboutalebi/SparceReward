@@ -83,10 +83,10 @@ class PolyRL():
         # if step_number > 0:
         #    print('target_percentage = ', self.number_of_time_target_policy_is_called/(step_number+1))
         self.percentage_exploration = self.number_of_time_target_policy_is_called / (step_number + 1)
-        logger.info("Percentage_target_policy__exploration_is_called: {}".format(self.percentage_exploration))
-        if (step_number % 1000 == 0 and tensor_board_writer.STOP == False):
-            self.percentage_exploration = self.number_of_time_target_policy_is_called / (step_number + 1)
-            tensor_board_writer.add_scalar('Percentage_target_policy__exploration_is_called',
+        if (step_number % 1000 == 0):
+            logger.info("Percentage_target_policy__exploration_is_called: {}".format(self.percentage_exploration))
+            if(tensor_board_writer.STOP == False):
+                tensor_board_writer.add_scalar('Percentage_target_policy__exploration_is_called',
                                            self.percentage_exploration, step_number + 1)
         return torch.Tensor(action)
 
