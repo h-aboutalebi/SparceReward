@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # directory path that contains all the folder of pkl files
 from graphs.func_graph import get_result_file, get_x, initilize_plt_conf, create_graph
 
-directory_path = "/Users/hosseinaboutalebi/Desktop/myfigures"
+directory_path = "/Users/hosseinaboutalebi/Desktop/myfigures/test"
 
 #### performance graphs ####
 result_folders = glob(directory_path + "/*/")
@@ -19,6 +19,6 @@ create_graph(plt=plt, target="mod_reward", plt_figure=f, y_label="reward", x_lab
              , colors=colors)
 #### exploration graph in polyrl ####
 g = plt.figure(2)
-create_graph(plt=plt, target="poly_exploration", plt_figure=g, y_label="explorations", x_label="step", result_folders=result_folders
+create_graph(plt=plt, target="poly_exploration", plt_figure=g, y_label="exploration percentage", x_label="step", result_folders=result_folders
              , colors=colors,smoothness=False, folder_name_cons="poly")
 
