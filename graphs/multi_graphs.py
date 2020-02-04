@@ -14,7 +14,7 @@ result_folders = glob(directory_path + "/*/")
 
 # initilizes the config of plt
 colors = ['b', 'g', 'r', 'm', 'y', 'c']
-smoothness=20
+smoothness=5
 f = plt.figure(1)
 create_graph(plt=plt, target="mod_reward", plt_figure=f, y_label="reward", x_label="step", result_folders=result_folders
              , colors=colors,smoothness=smoothness)
