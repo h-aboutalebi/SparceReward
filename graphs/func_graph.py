@@ -58,7 +58,7 @@ def get_result_file(results,path_file,target,smoothness=True):
     return max_step_nb(example_dict),len(y_values)
 
 def make_smooth_line(list):
-    ysmoothed = gaussian_filter1d(list, sigma=1)
+    ysmoothed = gaussian_filter1d(list, sigma=5)
     return ysmoothed
 
 def max_step_nb(example_dict):
