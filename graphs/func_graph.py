@@ -51,14 +51,14 @@ def get_result_file(results,path_file,target,smoothness=5):
         example_dict = pickle.load(f)
     y_values=[x[target] for x in example_dict]
     if(smoothness!=0):
-        y=make_smooth_line(y_values)
+        y=make_smooth_line(y_values,smoothness)
     else:
         y=y_values
     results.append(y)
     return max_step_nb(example_dict),len(y_values)
 
-def make_smooth_line(list):
-    ysmoothed = gaussian_filter1d(list, sigma=5)
+def make_smooth_line(list,smoothness):
+    ysmoothed = gaussian_filter1d(list, sigma=smoothness)
     return ysmoothed
 
 def max_step_nb(example_dict):
