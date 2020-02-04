@@ -13,7 +13,7 @@ class SAC_Poly_RL(SAC):
         super().__init__(state_dim, action_dim, max_action, action_space, gamma, tau, alpha, device,
                          update_interval, policy, automatic_entropy_tuning, hidden_size, lr, start_steps)
         self.poly_rl_alg = PolyRL(gamma=gamma, betta=betta, epsilon=epsilon, sigma_squared=sigma_squared,
-                                  actor_target_function=self.select_action, lambda_=lambda_, nb_actions=nb_actions,
+                                  actor_target_function=self.select_action_target, lambda_=lambda_, nb_actions=nb_actions,
                                   nb_observations=nb_observations, max_action=max_action, min_action=min_action)
         self.nb_environment_reset=0
 
