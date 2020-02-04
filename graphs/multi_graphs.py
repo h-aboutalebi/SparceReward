@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # directory path that contains all the folder of pkl files
 from graphs.func_graph import get_result_file, get_x, initilize_plt_conf, create_graph
 
-directory_path = "/Users/hosseinaboutalebi/Desktop/myfigures/test"
+directory_path = "/Users/hosseinaboutalebi/Desktop/myfigures"
 
 #### performance graphs ####
 result_folders = glob(directory_path + "/*/")
