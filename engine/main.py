@@ -30,7 +30,7 @@ parser.add_argument('--del_tensor_file', action='store_false',
 
 # *********************************** Environment Setting ********************************************
 
-parser.add_argument('--env_name', default="Ant-v2",
+parser.add_argument('--env_name', default="Half_Cheetah-v2",
                     help='name of the environment to run')
 
 parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
