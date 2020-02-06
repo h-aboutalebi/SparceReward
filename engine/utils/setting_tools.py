@@ -90,7 +90,7 @@ def select_action_target(state, previous_action, tensor_board_writer
 
 
 def post_update_agent(agent, previous_state, next_state, done,step_number,writer):
-    if (type(agent).__name__ == "DDPGPolyRL" or type(agent).__name__ == "DDPGPolyRL"):
+    if (type(agent).__name__ == "DDPGPolyRL" or type(agent).__name__ == "DDPGPolyRL" or type(agent).__name__ == "SAC_Poly_RL"):
         agent.poly_rl_alg.update_parameters(previous_state=previous_state, new_state=next_state,
                                             tensor_board_writer=writer)
     elif(type(agent).__name__ == "DDPG_Ou_Noise"):
