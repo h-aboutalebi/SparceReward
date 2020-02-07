@@ -145,7 +145,7 @@ class DeterministicPolicy(nn.Module):
         noise = noise.clamp(-0.25, 0.25)
         import ipdb
         ipdb.set_trace()
-        noise = noise.cuda() if mean.is_cuda() else noise
+        noise = noise.cuda() if mean.is_cuda else noise
         action = mean + noise
         return action, torch.tensor(0.), mean
 
