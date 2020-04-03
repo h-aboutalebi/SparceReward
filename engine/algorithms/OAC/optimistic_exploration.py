@@ -6,7 +6,6 @@ import numpy as np
 
 
 def get_optimistic_exploration_action(ob_np, policy=None, qfs=None, hyper_params=None):
-
     assert ob_np.ndim == 1
 
     beta_UB = hyper_params['beta_UB']
@@ -72,3 +71,16 @@ def get_optimistic_exploration_action(ob_np, policy=None, qfs=None, hyper_params
     ac = dist.sample()
 
     ac_np = ptu.get_numpy(ac)
+
+    # mu_T_np = ptu.get_numpy(pre_tanh_mu_T)
+    # mu_C_np = ptu.get_numpy(mu_C)
+    # mu_E_np = ptu.get_numpy(mu_E)
+    # dict(
+    #     mu_T=mu_T_np,
+    #     mu_C=mu_C_np,
+    #     mu_E=mu_E_np
+    # )
+
+    # Return an empty dict, and do not log
+    # stats for now
+    return ac_np, {}
