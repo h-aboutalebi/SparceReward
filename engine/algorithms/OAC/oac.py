@@ -1,43 +1,50 @@
-from engine.algorithms.OAC.networks import FlattenMlp
-from engine.algorithms.OAC.trainer.policies import TanhGaussianPolicy, MakeDeterministic
-from engine.algorithms.OAC.trainer.trainer import SACTrainer
+from engine.algorithms.SAC.model import QNetwork, GaussianPolicy, DeterministicPolicy
+from torch.optim import Adam
+from engine.algorithms.SAC.utils import soft_update, hard_update
+import torch
+
+from engine.algorithms.SAC.sac import SAC
 
 
-class OAC:
+class OAC(SAC):
 
-    def __init__(self, state_dim, action_dim, beta_UB, delta, oac_target_tau=5e-3, gamma=0.99,
-                 oac_policy_lr=3E-4, target_update_period=1,oac_qf_lr=3E-4,reward_scale=1,
-                 use_automatic_entropy_tuning=True,layer_size=256):
-        self.state_dim = state_dim
-        self.action_dim = action_dim
-        self.layer_size = layer_size
-        self.q_producer = self.get_q_producer(state_dim, action_dim, hidden_sizes=[layer_size, layer_size])
-        self.policy_producer = self.get_policy_producer(state_dim, action_dim, hidden_sizes=[layer_size, layer_size])
-        self.trainer=SACTrainer(self.policy_producer, self.q_producer, action_dim, discount=gamma, soft_target_tau=oac_target_tau,
-                                target_update_period=target_update_period, policy_lr=oac_policy_lr, qf_lr=oac_qf_lr,reward_scale=reward_scale,
-                                use_automatic_entropy_tuning=use_automatic_entropy_tuning)
-        self.algorithm=
+    def __init__(self, state_dim, action_dim, max_action, action_space, gamma, tau, alpha, device, update_interval=1,
+                 policy="Gaussian", automatic_entropy_tuning=False, hidden_size=256, lr=0.0003, start_steps=10000):
+        super(OAC, self).__init__(state_dim=state_dim, action_dim=action_dim,
+                                  max_action=max_action,gamma=gamma,tau=tau,
+                                  alpha=alpha,device=device,
+                                  policy=policy, start_steps=start_steps)
+        self.automatic_entropy_tuning = automatic_entropy_tuning
+        self.critic = QNetwork(state_dim, action_dim, hidden_size).to(device=self.device)
+        self.critic_optim = Adam(self.critic.parameters(), lr=lr)
+        self.action_space = action_space
 
+        self.critic_target = QNetwork(state_dim, action_dim, hidden_size).to(self.device)
+        hard_update(self.critic_target, self.critic)
 
-    def get_q_producer(self, obs_dim, action_dim, hidden_sizes):
-        def q_producer():
-            return FlattenMlp(input_size=obs_dim + action_dim,
-                              output_size=1,
-                              hidden_sizes=hidden_sizes, )
+        if self.policy_type == "Gaussian":
+            # Target Entropy = −dim(A) (e.g. , -6 for HalfCheetah-v2) as given in the paper
+            if self.automatic_entropy_tuning == True:
+                self.target_entropy = -torch.prod(torch.Tensor(action_space.shape).to(self.device)).item()
+                self.log_alpha = torch.zeros(1, requires_grad=True, device=self.device)
+                self.alpha_optim = Adam([self.log_alpha], lr=lr)
 
-        return q_producer
+            self.policy = GaussianPolicy(state_dim, action_dim, hidden_size, action_space).to(
+                self.device)
+            self.policy_optim = Adam(self.policy.parameters(), lr=lr)
 
-    def get_policy_producer(self, obs_dim, action_dim, hidden_sizes):
-        def policy_producer(deterministic=False):
-            policy = TanhGaussianPolicy(
-                obs_dim=obs_dim,
-                action_dim=action_dim,
-                hidden_sizes=hidden_sizes,
-            )
+        else:
+            self.alpha = 0
+            self.automatic_entropy_tuning = False
+            self.policy = DeterministicPolicy(state_dim, action_space.shape[0], hidden_size, action_space).to(
+                self.device)
+            self.policy_optim = Adam(self.policy.parameters(), lr=lr)
 
-            if deterministic:
-                policy = MakeDeterministic(policy)
-
-            return policy
-
-        return policy_producer
+    def select_action(self, state, tensor_board_writer=None, step_number=None):
+        self.counter_actions += 1
+        state = torch.Tensor(state).reshape(1, -1)
+        action, _, _ = self.policy.sample(state.to(self.device))
+        if (self.start_steps < self.counter_actions):
+            return action.detach().cpu().numpy()[0]
+        else:
+            return self.action_space.sample()
