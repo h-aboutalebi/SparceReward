@@ -11,13 +11,13 @@ def get_optimistic_exploration_action(ob_np, std,mean, critic,qfs=None, hyper_pa
     beta_UB = hyper_params['beta_UB']
     delta = hyper_params['delta']
 
-    ob = ptu.from_numpy(ob_np)
+    ob = ptu.from_numpy(ob_np.numpy())
 
     # Ensure that ob is not batched
     assert len(list(ob.shape)) == 1
 
-    std=std
-    pre_tanh_mu_T=mean
+    std=std[0]
+    pre_tanh_mu_T=mean[0]
 
     # Ensure that pretanh_mu_T is not batched
     assert len(list(pre_tanh_mu_T.shape)) == 1, pre_tanh_mu_T
@@ -83,4 +83,4 @@ def get_optimistic_exploration_action(ob_np, std,mean, critic,qfs=None, hyper_pa
 
     # Return an empty dict, and do not log
     # stats for now
-    return ac_np, {}
+    return ac_np
