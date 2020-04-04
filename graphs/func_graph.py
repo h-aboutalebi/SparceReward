@@ -5,7 +5,7 @@ from glob import glob
 import math
 
 def create_graph(plt, target, plt_figure, y_label, x_label, result_folders, colors,
-                 folder_name_cons="",smoothness=True):
+                 folder_name_cons="",smoothness=5):
     dict_results = {}
     line_names = []
     initilize_plt_conf(plt,y_label,x_label)
@@ -46,19 +46,19 @@ def get_x(path_file):
     x = [x["step_nb"] for x in example_dict]
     return x
 
-def get_result_file(results,path_file,target,smoothness=True):
+def get_result_file(results,path_file,target,smoothness=5):
     with open(path_file, 'rb') as f:
         example_dict = pickle.load(f)
     y_values=[x[target] for x in example_dict]
-    if(smoothness):
-        y=make_smooth_line(y_values)
+    if(smoothness!=0):
+        y=make_smooth_line(y_values,smoothness)
     else:
         y=y_values
     results.append(y)
     return max_step_nb(example_dict),len(y_values)
 
-def make_smooth_line(list):
-    ysmoothed = gaussian_filter1d(list, sigma=1)
+def make_smooth_line(list,smoothness):
+    ysmoothed = gaussian_filter1d(list, sigma=smoothness)
     return ysmoothed
 
 def max_step_nb(example_dict):

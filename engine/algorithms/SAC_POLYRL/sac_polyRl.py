@@ -16,6 +16,7 @@ class SAC_Poly_RL(SAC):
                                   actor_target_function=self.select_action_target, lambda_=lambda_, nb_actions=nb_actions,
                                   nb_observations=nb_observations, max_action=max_action, min_action=min_action)
         self.nb_environment_reset=0
+        self.previous_state = None
 
     def get_exploration_percentage(self):
         return self.poly_rl_alg.percentage_exploration

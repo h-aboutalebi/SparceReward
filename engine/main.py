@@ -30,7 +30,7 @@ parser.add_argument('--del_tensor_file', action='store_false',
 
 # *********************************** Environment Setting ********************************************
 
-parser.add_argument('--env_name', default="Ant-v2",
+parser.add_argument('--env_name', default="HalfCheetah-v2",
                     help='name of the environment to run')
 
 parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
@@ -121,7 +121,12 @@ parser.add_argument('--policy_sac', type=str, default="Gaussian",
 parser.add_argument('--start_steps', type=int, default=10000,
                     help='algorithm to use: Gaussian | Deterministic')
 
-# *********************************** SAC_Poly_Rl Setting ********************************************
+# *********************************** OAC Setting ********************************************
+
+parser.add_argument("--beta_UB_OAC", default=4.66, type=float)
+
+parser.add_argument("--delta_OAC", default=23.53, type=float)
+
 
 args = parser.parse_args()
 

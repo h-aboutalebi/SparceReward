@@ -14,7 +14,6 @@ def weights_init_(m):
         torch.nn.init.xavier_uniform_(m.weight, gain=1)
         torch.nn.init.constant_(m.bias, 0)
 
-
 class ValueNetwork(nn.Module):
     def __init__(self, num_inputs, hidden_dim):
         super(ValueNetwork, self).__init__()
@@ -111,7 +110,6 @@ class GaussianPolicy(nn.Module):
         self.action_bias = self.action_bias.to(device)
         return super(GaussianPolicy, self).to(device)
 
-
 class DeterministicPolicy(nn.Module):
     def __init__(self, num_inputs, num_actions, hidden_dim, action_space=None):
         super(DeterministicPolicy, self).__init__()
@@ -143,6 +141,9 @@ class DeterministicPolicy(nn.Module):
         mean = self.forward(state)
         noise = self.noise.normal_(0., std=0.1)
         noise = noise.clamp(-0.25, 0.25)
+        # import ipdb
+        # ipdb.set_trace()
+        noise = noise.cuda() if mean.is_cuda else noise
         action = mean + noise
         return action, torch.tensor(0.), mean
 
