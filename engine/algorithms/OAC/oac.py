@@ -21,10 +21,12 @@ class OAC(SAC):
     def select_action(self, state, tensor_board_writer=None, step_number=None):
         hyper_params={'beta_UB':self.beta_UB,
                       'delta':self.delta}
+        mean, log_std = self.policy(state)
+        std=log_std.exp()
         self.counter_actions += 1
         state = torch.Tensor(state).reshape(1, -1)
         action, _, _ = self.policy.sample(state.to(self.device))
         if (self.start_steps < self.counter_actions):
             return action.detach().cpu().numpy()[0]
         else:
-            return get_optimistic_exploration_action(ob_np=state, )
+            return get_optimistic_exploration_action(ob_np=state, std=std,mean=mean)

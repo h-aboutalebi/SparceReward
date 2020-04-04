@@ -5,7 +5,7 @@ import math
 import numpy as np
 
 
-def get_optimistic_exploration_action(ob_np, policy=None, qfs=None, hyper_params=None):
+def get_optimistic_exploration_action(ob_np, std,mean, qfs=None, hyper_params=None):
     assert ob_np.ndim == 1
 
     beta_UB = hyper_params['beta_UB']
@@ -16,7 +16,8 @@ def get_optimistic_exploration_action(ob_np, policy=None, qfs=None, hyper_params
     # Ensure that ob is not batched
     assert len(list(ob.shape)) == 1
 
-    _, pre_tanh_mu_T, _, _, std, _ = policy(ob)
+    std=std
+    pre_tanh_mu_T=mean
 
     # Ensure that pretanh_mu_T is not batched
     assert len(list(pre_tanh_mu_T.shape)) == 1, pre_tanh_mu_T
