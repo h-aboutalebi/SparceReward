@@ -121,7 +121,12 @@ parser.add_argument('--policy_sac', type=str, default="Gaussian",
 parser.add_argument('--start_steps', type=int, default=10000,
                     help='algorithm to use: Gaussian | Deterministic')
 
-# *********************************** SAC_Poly_Rl Setting ********************************************
+# *********************************** OAC Setting ********************************************
+
+parser.add_argument("--beta_UB_OAC", default=4.66, type=float)
+
+parser.add_argument("--delta_OAC", default=23.53, type=float)
+
 
 args = parser.parse_args()
 
