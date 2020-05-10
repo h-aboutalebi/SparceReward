@@ -27,7 +27,7 @@ class SAC(AbstractAgent):
         self.critic = QNetwork(state_dim, action_dim, hidden_size).to(device=self.device)
         self.critic_optim = Adam(self.critic.parameters(), lr=lr)
         self.action_space = action_space
-
+        self.alpha_list=[]
         self.critic_target = QNetwork(state_dim, action_dim, hidden_size).to(self.device)
         hard_update(self.critic_target, self.critic)
 
@@ -120,6 +120,7 @@ class SAC(AbstractAgent):
 
         if step_number % self.update_interval == 0:
             soft_update(self.critic_target, self.critic, self.tau)
+        self.alpha_list.append(self.alpha)
 
         return qf1_loss.item(), qf2_loss.item(), policy_loss.item(), alpha_loss.item(), alpha_tlogs.item()
 
