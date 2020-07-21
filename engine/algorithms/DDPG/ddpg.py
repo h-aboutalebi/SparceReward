@@ -49,6 +49,7 @@ class DDPG(AbstractAgent):
     def __init__(self, state_dim, action_dim, max_action, expl_noise, action_high, action_low, tau,device,lr_actor):
         super(DDPG, self).__init__(state_dim=state_dim, action_dim=action_dim,
                                    max_action=max_action,device=device)
+
         self.expl_noise = expl_noise
         self.action_dim = action_dim
         self.action_high = action_high
