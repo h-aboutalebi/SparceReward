@@ -154,7 +154,7 @@ class PolyRL():
                 if (self.C_theta == 1):
                     K = K + j
                 elif (self.C_theta > 0):
-                    K = K + j * np.exp((j - self.i) / (1 / np.log(self.C_theta)))
+                    K = K + j *np.exp(self.check_pow((j - self.i) / (1 / np.log(self.C_theta))))
             norm_B_vector = np.linalg.norm(self.B_vector.numpy(), ord=2)
             last_term = (1 / (self.i - 1)) * self.old_g
 
@@ -190,7 +190,7 @@ class PolyRL():
             return 1
         else:
             Lp = 1 / np.log(self.C_theta)
-            return np.exp((-abs(self.i - 1)) / Lp)
+            return np.exp(self.check_pow(-abs(self.i - 1) / Lp))
 
     # This function resets the parameters of class
     def reset_parameters_PolyRL(self):
@@ -206,3 +206,8 @@ class PolyRL():
         # self.t = 0
         # self.w_new = torch.zeros(self.nb_observations)
         # self.w_old = torch.zeros(self.nb_observations)
+
+    def check_pow(self,i):
+        if(i<100):
+            return i
+        return 100
