@@ -121,13 +121,10 @@ parser.add_argument('--policy_sac', type=str, default="Gaussian",
 parser.add_argument('--start_steps', type=int, default=10000,
                     help='algorithm to use: Gaussian | Deterministic')
 
-# *********************************** OAC Setting ********************************************
+parser.add_argument('--automatic_entropy_tuning', action='store_true',
+                    help='for making reward sparse. Default=False')
 
-parser.add_argument("--beta_UB_OAC", default=4.66, type=float)
-
-parser.add_argument("--delta_OAC", default=23.53, type=float)
-
-
+# *********************************** SAC_Poly_Rl Setting ********************************************
 args = parser.parse_args()
 
 # sets the seed for making it comparable with other implementations

@@ -1,11 +1,12 @@
 import pickle
 from scipy.ndimage.filters import gaussian_filter1d
+from scipy.stats import sem
 import numpy as np
 from glob import glob
 import math
 
 def create_graph(plt, target, plt_figure, y_label, x_label, result_folders, colors,
-                 folder_name_cons="",smoothness=5):
+                 folder_name_cons="",smoothness=5, directory_path = "", name = 'fig'):
     dict_results = {}
     line_names = []
     initilize_plt_conf(plt,y_label,x_label)
@@ -30,14 +31,20 @@ def create_graph(plt, target, plt_figure, y_label, x_label, result_folders, colo
         for data in results:
             normalized_results.append(data[:min_y_axis])
         mean = np.mean(np.array(normalized_results), axis=0)
-        std = np.std(np.array(normalized_results), axis=0)
-        plt.plot(x, mean, colors[c], label=name_folder)
+        std = sem(np.array(normalized_results), axis=0)
+        plt.plot(x, mean, colors[c], label=name_folder, alpha = 0.5)
+        plt.ylabel(y_label, fontsize=24)
+        plt.xlabel(x_label, fontsize=24)
+        plt.gcf().subplots_adjust(bottom=0.18, left = 0.18)
+        plt.tick_params(labelsize=18)
+        #plt.ylim(0, 1100)
         plt.fill_between(x, mean - std, mean + std, edgecolor=colors[c],
                          facecolor=colors[c], alpha=0.21,
                          linewidth=0)
         dict_results[name_folder] = {"mean": mean, "std": std}
     plt.legend(loc='upper left')
     axes = plt.gca()
+    plt.savefig(directory_path + '/' + name + '.pdf')
     plt_figure.show()
 
 def get_x(path_file):
@@ -55,7 +62,7 @@ def get_result_file(results,path_file,target,smoothness=5):
     else:
         y=y_values
     results.append(y)
-    return max_step_nb(example_dict),len(y_values)
+    return max_step_nb(example_dict), len(y_values)
 
 def make_smooth_line(list,smoothness):
     ysmoothed = gaussian_filter1d(list, sigma=smoothness)
@@ -68,5 +75,8 @@ def initilize_plt_conf(plt,y_label,x_label):
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+
+
+
 
 
